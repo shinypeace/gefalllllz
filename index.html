@@ -1,1001 +1,1212 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tower Blocks</title>
-    <!-- Yandex Games SDK -->
-    <script src="https://yandex.ru/games/sdk/v2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.3/TweenMax.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gemfall Saga</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 1. ДОБАВЛЕН TONE.JS ДЛЯ ЗВУКОВ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         :root {
-            --bg-top: #1a237e;
-            --bg-bottom: #0d47a1;
-            --text-color: #0d47a1;
-            --text-color-light: #5472d3;
-            --accent-color: #ffc107;
+            --bg-main: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-modal: rgba(22, 33, 62, 0.9);
+            --text-primary: #e94560;
+            --text-secondary: #ffffff;
+            --accent-color: #0f3460;
+            --border-color: #e94560;
+            --font-main: 'Inter', sans-serif;
+            --progress-bar-bg: #16213e;
+            --progress-bar-fill: #e94560;
         }
 
-        html, body {
-            margin: 0;
-            overflow: hidden;
-            height: 100%;
-            width: 100%;
-            position: relative;
-            font-family: 'Montserrat', sans-serif;
-            color: var(--text-color);
-            background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+        /* --- THEMES --- */
+        
+        /* 2. ДОБАВЛЕНЫ ФОНЫ ДЛЯ ТЕМ */
+        .theme-space .main-container { background-image: url('bg-space.png'); background-size: cover; background-position: center; }
+        .theme-forest .main-container { background-image: url('bg-forest.png'); background-size: cover; background-position: center; }
+        .theme-ocean .main-container { background-image: url('bg-ocean.png'); background-size: cover; background-position: center; }
+        .theme-retro .main-container { background-image: url('bg-retro.png'); background-size: cover; background-position: center; }
+
+        /* 3. УДАЛЕНЫ ВСЕ СТИЛИ ФОРМ (border-radius, width, transform) ИЗ ТЕМ */
+        .theme-forest {
+            --bg-main: #2d4c1e; --bg-secondary: #3e6d2b; --bg-modal: rgba(45, 76, 30, 0.9);
+            --text-primary: #f0a500; --accent-color: #1b3d1a; --border-color: #f0a500;
+            --progress-bar-bg: #3e6d2b; --progress-bar-fill: #f0a500;
         }
-        #container {
-            width: 100%;
-            height: 100%;
-            position: relative;
+        .theme-ocean {
+            --bg-main: #003366; --bg-secondary: #00509e; --bg-modal: rgba(0, 51, 102, 0.9);
+            --text-primary: #87ceeb; --accent-color: #001f3f; --border-color: #87ceeb;
+            --progress-bar-bg: #00509e; --progress-bar-fill: #87ceeb;
         }
-        #game {
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
+        .theme-retro {
+            --bg-main: #222222; --bg-secondary: #393939; --bg-modal: rgba(34, 34, 34, 0.95);
+            --text-primary: #00ff00; --accent-color: #555555; --border-color: #00ff00;
+            --progress-bar-bg: #393939; --progress-bar-fill: #00ff00;
         }
-        .ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-            text-align: center;
-        }
-        .ui-layer > * {
-            pointer-events: all;
+        .theme-retro .main-container {
+            /* Оставляем сетку для ретро */
+            background-image: linear-gradient(rgba(0,255,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,0,0.1) 1px, transparent 1px), url('bg-retro.png');
+            background-size: 20px 20px, 20px 20px, cover;
         }
         
-        /* --- Menu --- */
-        #main-menu .title {
-            font-family: 'Oswald', sans-serif;
-            line-height: 1;
-            margin-bottom: 0.75em;
-            color: #ffffff;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
-        }
-        #main-menu .title-line-1 {
-            font-size: 4.5rem;
-            font-weight: 700;
-            display: block;
-        }
-        #main-menu .title-line-2 {
-            font-size: 2.25rem;
-            font-weight: 700;
-            display: block;
-            margin-top: -0.3em;
-        }
-        #main-menu .button-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1em;
-        }
-        
-        .main-content {
-             /* This block will be centered by the parent .ui-layer */
+        /* --- End of Themes --- */
+
+        body {
+            font-family: var(--font-main); background-color: var(--bg-main); color: var(--text-secondary);
+            touch-action: none; overflow: hidden; height: 100vh;
         }
 
-        #main-menu p {
-            font-size: 1.1rem;
-            color: #bbdefb;
-            font-weight: bold;
-            margin-top: 1em;
+        .main-container {
+            background: linear-gradient(145deg, var(--bg-secondary), var(--bg-main));
+            display: flex; justify-content: center; align-items: center;
+            height: 100%; width: 100%; overflow: hidden;
+            /* 4. СТИЛИ ФОНА ПО УМОЛЧАНИЮ (ДЛЯ SPACE) */
+            background-image: url('bg-space.png');
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.3s ease;
         }
-        .button {
-            background-color: #ffffff;
-            color: var(--text-color);
-            border: none;
-            border-radius: 12px;
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            width: 220px;
+
+        .main-menu, .game-screen {
+            width: 100%; max-width: 420px; height: 100%; max-height: 900px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 1rem 1.5rem; 
             box-sizing: border-box;
         }
-        .button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
 
-        /* --- In-Game UI --- */
-        #in-game-ui {
-            justify-content: flex-start;
-        }
-        #score {
-            position: absolute;
-            top: 20px;
-            width: 100%;
-            text-align: center;
-            font-size: 10vh;
-            font-family: 'Oswald', sans-serif;
-            color: #ffffff;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
-            transition: transform 0.5s ease, opacity 0.5s ease;
-            transform: translateY(-200px) scale(1);
-            opacity: 0;
-        }
-        #perfect-placement-text {
-            position: absolute;
-            top: 25vh;
-            font-size: 2rem;
-            font-family: 'Oswald', sans-serif;
-            color: var(--accent-color);
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease, transform 0.5s ease;
-        }
-        #pause-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            background-color: rgba(255,255,255,0.8);
-            border-radius: 50%;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 100;
-        }
-        #pause-button span {
-            display: block;
-            width: 5px;
-            height: 20px;
-            background-color: var(--text-color);
-            margin: 0 3px;
+        .game-title {
+            font-size: 3.5rem; font-weight: 900; color: var(--text-primary);
+            text-shadow: 0 0 15px var(--text-primary); margin-bottom: 2rem;
+            animation: glow 1.5s ease-in-out infinite alternate;
         }
         
-        /* --- Modal & Menus --- */
-        .modal-background, .menu-background {
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        .modal-box, .menu-box {
-            background: rgba(255,255,255,0.95);
-            padding: 30px 40px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            width: clamp(280px, 80vw, 400px);
-            max-height: 80vh; /* Limit height */
-            overflow-y: auto; /* Enable scroll if needed */
-        }
-        .menu-box .button, .modal-box .button {
-            display: block;
-            margin: 15px auto 0 auto;
-            width: 100%;
-        }
-        .modal-box h2, .menu-box h2 {
-            font-family: 'Oswald', sans-serif;
-            font-size: 2.5rem;
-            margin-bottom: 0.5em;
-            margin-top: 0;
-        }
-        .modal-box p {
-            text-align: left;
-            margin-bottom: 1em;
-            line-height: 1.5;
-        }
-        .modal-box ul {
-            text-align: left;
-            padding-left: 20px;
-            margin-bottom: 1.5em;
-        }
-        .menu-box .score-display {
-            margin-bottom: 1.5em;
-        }
-        .menu-box .score-display span {
-            display: block;
-            font-size: 1.1rem;
-            color: var(--text-color-light);
-        }
-        .menu-box .score-display strong {
-            display: block;
-            font-size: 2rem;
-            color: var(--text-color);
+        @keyframes glow {
+            from { text-shadow: 0 0 10px var(--text-primary), 0 0 20px var(--text-primary), 0 0 30px var(--accent-color); }
+            to { text-shadow: 0 0 20px var(--text-primary), 0 0 30px var(--accent-color), 0 0 40px var(--accent-color); }
         }
 
-        /* --- State Handling --- */
-        .hidden {
-            display: none !important;
+        .btn {
+            background-color: var(--accent-color); color: var(--text-secondary); border: 2px solid var(--border-color);
+            border-radius: 1rem; padding: 1rem 2rem; font-size: 1.25rem; font-weight: 600;
+            width: 100%; margin-bottom: 1rem; cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); text-transform: uppercase;
         }
-        #container.playing #score,
-        #container.ended #score {
-            transform: translateY(0px) scale(1);
-            opacity: 1;
+
+        .btn:hover {
+            background-color: var(--border-color); color: var(--bg-secondary);
+            transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
-        #container.ended #score {
-            transform: translateY(6vh) scale(1.5);
+        
+        .icon-btn-group { display: flex; justify-content: center; gap: 1.5rem; margin-top: 1.5rem; }
+
+        .icon-btn {
+            background: var(--accent-color); border: 2px solid var(--border-color); border-radius: 50%;
+            width: 60px; height: 60px; display: flex; justify-content: center; align-items: center;
+            transition: all 0.3s ease;
         }
+        
+        .icon-btn:hover { background-color: var(--border-color); transform: scale(1.1); }
+        .icon-btn svg { width: 32px; height: 32px; transition: fill 0.3s ease; }
+        .icon-btn .primary-path { fill: var(--text-secondary); }
+        .icon-btn .secondary-path { fill: var(--text-primary); }
+        .icon-btn:hover .primary-path, .icon-btn:hover .secondary-path { fill: var(--bg-secondary); }
+
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-modal);
+            backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--bg-secondary); padding: 2rem; border-radius: 1.5rem; border: 2px solid var(--border-color);
+            width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transform: scale(0.9); transition: transform 0.3s ease;
+        }
+        .modal.active .modal-content { transform: scale(1); }
+        .modal-title { font-size: 2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.5rem; text-align: center; }
+        
+        .game-header {
+            width: 100%; display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem;
+            align-items: center; margin-bottom: 0.5rem; 
+            padding: 0.5rem; background: var(--accent-color); border-radius: 1rem;
+            flex-shrink: 0; 
+        }
+        .header-item { display: flex; align-items: center; background-color: var(--bg-main); padding: 0.5rem 1rem; border-radius: 0.75rem; }
+        .header-item svg { width: 24px; height: 24px; fill: var(--text-primary); margin-right: 0.5rem; }
+        .header-item span { font-size: 1.1rem; font-weight: 600; }
+        .pause-btn-container { justify-self: center; background: none; padding: 0; }
+        .moves-container { justify-self: end; }
+        #rise-progress-bar-container { grid-column: 1 / -1; height: 8px; background-color: var(--progress-bar-bg); border-radius: 4px; overflow: hidden; margin: 0.25rem 0.5rem 0.5rem; }
+        #rise-progress-bar { width: 100%; height: 100%; background-color: var(--progress-bar-fill); transition: width 0.3s ease-in-out; }
+
+        #game-board {
+            position: relative;
+            /* 5. ИЗМЕНЕН ASPECT-RATIO */
+            aspect-ratio: 7 / 10; 
+            width: 100%;
+            overflow: hidden;
+            background-color: var(--accent-color);
+            border-radius: 1rem;
+            box-sizing: border-box;
+            max-height: 75vh; 
+            margin-left: auto; 
+            margin-right: auto;
+        }
+
+        .tile {
+            aspect-ratio: 1 / 1; position: absolute;
+            transition: top 0.3s ease, left 0.3s ease;
+            will-change: top, left, transform;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* 6. СТИЛИ ДЛЯ PNG ЭЛЕМЕНТОВ */
+        .tile-inner {
+            width: 100%; /* Занимает 100% плитки */
+            height: 100%;
+            border-radius: 0; /* PNG сами имеют форму */
+            box-shadow: none; /* Убираем тень */
+            transition: transform 0.2s ease, background-image 0.3s ease;
+            
+            /* Свойства для PNG */
+            background-color: transparent !important;
+            background-size: contain; /* 'contain' чтобы влезал полностью */
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        .tile-inner.gem-red { background-image: url('gem-red.png'); }
+        .tile-inner.gem-blue { background-image: url('gem-blue.png'); }
+        .tile-inner.gem-green { background-image: url('gem-green.png'); }
+        .tile-inner.gem-yellow { background-image: url('gem-yellow.png'); }
+        .tile-inner.gem-purple { background-image: url('gem-purple.png'); }
+        .tile-inner.gem-orange { background-image: url('gem-orange.png'); }
+        
+        .tile-inner.bomb { background-image: url('bonus-bomb.png') !important; }
+        .tile-inner.rocket { background-image: url('bonus-rocket.png') !important; }
+
+        
+        .tile.unmovable .tile-inner {
+            /* 7. СТИЛИ БЛОКОВ ОСТАЛИСЬ ПРЕЖНИМИ */
+            width: 85%; height: 85%; border-radius: 25%;
+            background-color: #555 !important; 
+            border: 2px solid #333;
+            background-image: repeating-linear-gradient(45deg, #666, #666 10px, #555 10px, #555 20px) !important;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.4);
+        }
+        
+        .tile.match { animation: match 0.4s ease-in forwards; }
+        @keyframes match { 0% { transform: scale(1.1); } 100% { transform: scale(0); opacity: 0; } }
+        
+        .tile.bonus-create .tile-inner {
+            animation: bonus-create-anim 0.4s ease-out;
+        }
+        @keyframes bonus-create-anim {
+            0% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .rocket-effect { 
+            position: absolute; 
+            background-color: rgba(255, 255, 255, 0.7); 
+            box-shadow: 0 0 15px 10px white; 
+            border-radius: 5px; 
+            pointer-events: none; 
+            z-index: 10;
+        }
+        .rocket-effect.row { animation: rocket-row 0.3s ease-out forwards; }
+        .rocket-effect.col { animation: rocket-col 0.3s ease-out forwards; }
+        @keyframes rocket-row { 
+            0% { transform: scaleX(0.1); opacity: 1; } 
+            100% { transform: scaleX(1); opacity: 0; } 
+        }
+        @keyframes rocket-col { 
+            0% { transform: scaleY(0.1); opacity: 1; } 
+            100% { transform: scaleY(1); opacity: 0; } 
+        }
+        
+        /* 8. АНИМАЦИЯ ДЛЯ КОМБО */
+        .combo-effect {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: 0 0 20px 15px white;
+            animation: combo-explode 0.4s ease-out forwards;
+        }
+        @keyframes combo-explode {
+            0% { transform: scale(0.2); opacity: 0.8; }
+            100% { transform: scale(4.5); opacity: 0; } /* Сделал взрыв больше */
+        }
+
+        .hidden { display: none !important; }
+
+        .stat-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .stat-table th, .stat-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--accent-color); }
+        .stat-table th { color: var(--text-primary); }
+        .stat-table .no-data td { text-align: center; color: #888; }
+        #final-score-value, #final-moves-value { color: var(--text-primary); font-weight: 700; }
+
+        /* 9. УДАЛЕНЫ СТИЛИ ДЛЯ :after У БОНУСОВ */
+        .bomb .tile-inner, .rocket .tile-inner {
+            background: transparent !important;
+            border-radius: 0 !important;
+            transform: rotate(0deg) !important;
+            width: 100% !important;
+            height: 100% !important;
+            border-color: transparent !important; 
+        }
+        
+        .theme-selection button { width: 50px; height: 50px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: border-color 0.2s; }
+        .theme-selection button.active { border-color: var(--text-primary); }
+        #theme-space { background: #1a1a2e; } #theme-forest { background: #2d4c1e; }
+        #theme-ocean { background: #003366; } #theme-retro { background: #222222; }
     </style>
 </head>
-<body>
-    <div id="container">
-        <div id="game"></div>
-
-        <div id="main-menu" class="ui-layer">
-            <div class="main-content">
-                <div class="title">
-                    <span class="title-line-1">TOWER</span>
-                    <span class="title-line-2">BLOCKS</span>
-                </div>
-                <div class="button-group">
-                    <button id="start-button" class="button" data-lang-key="play">Играть</button>
-                    <button id="rules-button" class="button" data-lang-key="rules">Правила</button>
-                </div>
-                <p><span data-lang-key="record_prefix">Рекорд:</span> <span id="high-score">0</span></p>
+<body class="theme-space">
+    <div class="main-container">
+        <!-- Main Menu -->
+        <div id="main-menu-screen" class="main-menu">
+            <h1 class="game-title">Gemfall Saga</h1>
+            <button id="classic-mode-btn" class="btn">Классика</button>
+            <button id="hard-mode-btn" class="btn">Хард</button>
+            <div class="icon-btn-group">
+                <!-- 10. НОВАЯ СИММЕТРИЧНАЯ ИКОНКА НАСТРОЕК -->
+                <button id="settings-btn" class="icon-btn" aria-label="Settings">
+                    <svg viewBox="0 0 24 24">
+                        <path class="primary-path" d="M19.4 12.9c.04-.3.06-.6.06-.9s-.02-.6-.06-.9l2-1.6c.2-.2.2-.5 0-.7l-2-3.5c-.1-.2-.4-.3-.6-.2l-2.5 1c-.5-.4-1.1-.7-1.7-.9l-.4-2.7C14.6 2.2 14.3 2 14 2h-4c-.3 0-.6.2-.7.4l-.4 2.7c-.6.2-1.2.5-1.7.9l-2.5-1c-.2 0-.5.1-.6.3l-2 3.5c-.1.2-.1.5 0 .7l2 1.6c-.04.3-.06.6-.06.9s.02.6.06.9l-2 1.6c-.2.2-.2.5 0 .7l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7.9l.4 2.7c.1.2.4.4.7.4h4c.3 0 .6-.2.7-.4l.4-2.7c.6-.2 1.2-.5 1.7-.9l2.5 1c.2 0 .5-.1.6-.3l2-3.5c.1-.2.1-.5 0-.7l-2-1.6zM12 15.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
+                    </svg>
+                </button>
+                <button id="rules-btn" class="icon-btn" aria-label="Rules"><svg viewBox="0 0 24 24"><path class="secondary-path" d="M11 7h2v2h-2zm0 4h2v6h-2z"/><path class="primary-path" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></button>
+                <button id="stats-btn" class="icon-btn" aria-label="Stats"><svg viewBox="0 0 24 24"><path class="primary-path" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-5h2v5zm4 0h-2V7h2v10zm4 0h-2v-3h2v3z"/><path class="secondary-path" d="M7 12h2v5H7zm4-5h2v10h-2zm4 3h2v7h-2z"/></svg></button>
             </div>
         </div>
         
-        <div id="rules-modal" class="ui-layer modal-background hidden">
-            <div class="modal-box">
-                <h2 data-lang-key="rules_title">Правила Игры</h2>
-                <p data-lang-key="rules_p1">Ваша задача — построить как можно более высокую башню, устанавливая блоки друг на друга.</p>
-                <ul>
-                    <li data-lang-key="rules_li1">Нажимайте на экран (или пробел), чтобы остановить движущийся блок.</li>
-                    <li data-lang-key="rules_li2">Часть блока, вышедшая за пределы нижнего, отколется.</li>
-                    <li data-lang-key="rules_li3">Башня станет уже, и строить будет сложнее!</li>
-                </ul>
-                <p><strong data-lang-key="rules_combo_title">⭐ Идеальное Комбо:</strong></p>
-                <ul>
-                    <li data-lang-key="rules_combo_li1">Установите <strong>6 блоков идеально</strong> подряд, чтобы активировать комбо.</li>
-                    <li data-lang-key="rules_combo_li2">Каждое следующее идеальное попадание будет <strong>увеличивать размер</strong> платформы, возвращая ее к первоначальной ширине!</li>
-                </ul>
-                <button id="close-rules-button" class="button" data-lang-key="rules_close">Понятно</button>
-            </div>
-        </div>
-
-        <div id="in-game-ui" class="ui-layer hidden">
-            <div id="score">0</div>
-            <div id="perfect-placement-text" data-lang-key="perfect">ИДЕАЛЬНО!</div>
-            <div id="pause-button">
-                <span></span>
-                <span></span>
-            </div>
-        </div>
-
-        <div id="pause-menu" class="ui-layer menu-background hidden">
-            <div class="menu-box">
-                <button id="resume-button" class="button" data-lang-key="resume">Продолжить</button>
-                <button id="restart-button" class="button" data-lang-key="restart">Заново</button>
-                <button id="menu-button" class="button" data-lang-key="main_menu">В меню</button>
-            </div>
-        </div>
-        
-        <div id="game-over-menu" class="ui-layer menu-background hidden">
-             <div class="menu-box">
-                <h2 data-lang-key="game_over">Игра окончена</h2>
-                <div class="score-display">
-                    <span data-lang-key="your_score">Ваш счет</span>
-                    <strong id="final-score">0</strong>
+        <!-- Game Screen -->
+        <div id="game-screen" class="game-screen hidden">
+            <div class="game-header">
+                <div class="header-item score-container">
+                    <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                    <span id="score">0</span>
                 </div>
-                 <div class="score-display">
-                    <span data-lang-key="record">Рекорд</span>
-                    <strong id="game-over-high-score">0</strong>
+                <div class="pause-btn-container">
+                     <button id="pause-btn" class="icon-btn" style="width: 50px; height: 50px;">
+                        <svg viewBox="0 0 24 24" style="width: 28px; height: 28px;"><path class="primary-path" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+                     </button>
                 </div>
-                <button id="restart-game-over-button" class="button" data-lang-key="play_again">Играть снова</button>
-                <button id="menu-game-over-button" class="button" data-lang-key="main_menu_2">В меню</button>
+                <div class="header-item moves-container">
+                    <span>Ход: <span id="moves-count">0</span></span>
+                </div>
+                <div id="rise-progress-bar-container"><div id="rise-progress-bar"></div></div>
             </div>
+            <div id="game-board"></div>
         </div>
     </div>
 
+    <!-- Modals -->
+    <div id="pause-modal" class="modal"><div class="modal-content"><h2 class="modal-title">Пауза</h2><button id="resume-btn" class="btn">Продолжить</button><button id="restart-game-btn" class="btn">Начать заново</button><button id="main-menu-btn-pause" class="btn">Главное меню</button></div></div>
+    <div id="game-over-modal" class="modal"><div class="modal-content"><h2 class="modal-title">Игра окончена!</h2><p class="text-center text-lg mb-4">Ваш результат: <span id="final-score-value">0</span></p><p class="text-center text-lg mb-6">Ходов сделано: <span id="final-moves-value">0</span></p><button id="restart-game-over-btn" class="btn">Играть еще раз</button><button id="main-menu-btn-over" class="btn">Главное меню</button></div></div>
+    <div id="settings-modal" class="modal"><div class="modal-content"><h2 class="modal-title">Настройки</h2><h3 class="text-xl mb-4 text-center">Выбор темы</h3><div class="theme-selection flex justify-center gap-4"><button id="theme-space" data-theme="theme-space"></button><button id="theme-forest" data-theme="theme-forest"></button><button id="theme-ocean" data-theme="theme-ocean"></button><button id="theme-retro" data-theme="theme-retro"></button></div><button id="close-settings-btn" class="btn mt-8">Закрыть</button></div></div>
+    
+    <div id="rules-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Правила игры</h2>
+            <p class="mb-4" style="text-align: left;"><strong>Цель:</strong> Собирайте 3+ в ряд. Блоки снизу поднимаются с каждым ходом!</p>
+            <p class="mb-4" style="text-align: left;"><strong>Матчи:</strong><br>
+               - <strong>4 в ряд:</strong> <strong>Бомба</strong> (взрыв 3x3).<br>
+               - <strong>5 в ряд / L/T:</strong> <strong>Ракета</strong> (ряд + столбец).
+            </p>
+             <p class="mb-4" style="text-align: left;"><strong>Комбо:</strong><br>
+               - <strong>Бомба + Ракета:</strong> Взрыв 3 рядов и 3 столбцов.
+            </p>
+            <p class="mb-4" style="text-align: left;"><strong>Активация бонуса:</strong><br>
+               - Поменяйте бонус с любым элементом.<br>
+               - Тапните по бонусу дважды.
+            </p>
+             <p class="mb-4" style="text-align: left;"><strong>Блоки:</strong> Уничтожаются только *обычным* матчем (3+ в ряд) рядом с блоком.</p>
+            <button id="close-rules-btn" class="btn mt-6">Понятно</button>
+        </div>
+    </div>
+    
+    <div id="stats-modal" class="modal"><div class="modal-content"><h2 class="modal-title">Статистика</h2><table id="stats-table" class="stat-table"><thead><tr><th>Режим</th><th>Очки</th><th>Ходы</th></tr></thead><tbody></tbody></table><button id="close-stats-btn" class="btn mt-6">Закрыть</button></div></div>
+    
     <script>
-        console.clear();
+    // 11. ИНИЦИАЛИЗАЦИЯ ЗВУКА И МУЗЫКИ
+    let audioReady = false;
+    let synths = {};
+    let musicPlayer;
+
+    async function initAudio() {
+        if (audioReady) return;
+        try {
+            await Tone.start();
+            
+            synths = {
+                tap: new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination(),
+                match: new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 } }).toDestination(),
+                bomb: new Tone.NoiseSynth({ noise: { type: 'brown' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.1 } }).toDestination(),
+                rocket: new Tone.NoiseSynth({ noise: { type: 'white' }, filter: { Q: 2, type: 'bandpass', frequency: 1000 }, envelope: { attack: 0.05, decay: 0.2, sustain: 0, release: 0.1 } }).toDestination(),
+                combo: new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.2 } }).toDestination(),
+                lose: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 0.2 } }).toDestination()
+            };
+            synths.bomb.volume.value = -10;
+            synths.rocket.volume.value = -15;
+            synths.combo.volume.value = -8;
+
+            // Загрузка и запуск музыки
+            musicPlayer = new Tone.Player({
+                url: "music.mp3",
+                loop: true,
+                autostart: true,
+                volume: -12 // Сделать музыку фоновой
+            }).toDestination();
+            
+            audioReady = true;
+            console.log("Audio ready.");
+        } catch (e) {
+            console.error("Audio context failed to start:", e);
+        }
+    }
+    
+    // Запускаем аудио по первому клику
+    document.body.addEventListener('pointerdown', initAudio, { once: true });
+
+    function playSound(sound, time = Tone.now()) {
+        if (!audioReady) return; 
+        try {
+            if (sound === 'tap') synths.tap.triggerAttackRelease('C5', '8n', time);
+            else if (sound === 'match') synths.match.triggerAttackRelease(['C4', 'E4', 'G4'], '8n', time);
+            else if (sound === 'bomb') synths.bomb.triggerAttackRelease('2n', time);
+            else if (sound === 'rocket') {
+                synths.rocket.filter.frequency.setValueAtTime(500, time);
+                synths.rocket.filter.frequency.linearRampToValueAtTime(5000, time + 0.1);
+                synths.rocket.triggerAttackRelease('4n', time);
+            }
+            else if (sound === 'combo') synths.combo.triggerAttackRelease('1n', time);
+            else if (sound === 'lose') synths.lose.triggerAttackRelease('C3', '2n', time);
+        } catch (e) { console.error("Sound play error:", e); }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements ---
+        const mainMenuScreen = document.getElementById('main-menu-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const boardElement = document.getElementById('game-board');
+        const scoreElement = document.getElementById('score');
+        const movesCountElement = document.getElementById('moves-count');
+        const riseProgressBar = document.getElementById('rise-progress-bar');
+        const modals = document.querySelectorAll('.modal');
+
+        // --- Game Settings ---
+        // 12. ИЗМЕНЕНЫ ROWS
+        const ROWS = 10; const COLS = 7; const GAP = 4; 
+        // 13. ИЗМЕНЕНЫ ЦВЕТА (теперь это классы)
+        const COLORS = [
+            'gem-red', 'gem-blue', 'gem-green',
+            'gem-yellow', 'gem-purple', 'gem-orange'
+        ];
         
-        // --- Translation Data ---
-        const translations = {
-            en: {
-                play: 'Play',
-                rules: 'Rules',
-                record_prefix: 'High Score:',
-                rules_title: 'Game Rules',
-                rules_p1: 'Your goal is to build the tallest tower possible by stacking blocks on top of each other.',
-                rules_li1: 'Tap the screen (or press space) to stop the moving block.',
-                rules_li2: 'The part of the block that goes beyond the one below will be chopped off.',
-                rules_li3: 'The tower will get narrower, making it harder to build!',
-                rules_combo_title: '⭐ Perfect Combo:',
-                rules_combo_li1: 'Place <strong>6 blocks perfectly</strong> in a row to activate a combo.',
-                rules_combo_li2: 'Each subsequent perfect placement will <strong>increase the platform size</strong>, restoring it to its original width!',
-                rules_close: 'Got It',
-                perfect: 'PERFECT!',
-                resume: 'Resume',
-                restart: 'Restart',
-                main_menu: 'Main Menu',
-                game_over: 'Game Over',
-                your_score: 'Your Score',
-                record: 'High Score',
-                play_again: 'Play Again',
-                main_menu_2: 'Main Menu',
-            },
-            ru: {
-                play: 'Играть',
-                rules: 'Правила',
-                record_prefix: 'Рекорд:',
-                rules_title: 'Правила Игры',
-                rules_p1: 'Ваша задача — построить как можно более высокую башню, устанавливая блоки друг на друга.',
-                rules_li1: 'Нажимайте на экран (или пробел), чтобы остановить движущийся блок.',
-                rules_li2: 'Часть блока, вышедшая за пределы нижнего, отколется.',
-                rules_li3: 'Башня станет уже, и строить будет сложнее!',
-                rules_combo_title: '⭐ Идеальное Комбо:',
-                rules_combo_li1: 'Установите <strong>6 блоков идеально</strong> подряд, чтобы активировать комбо.',
-                rules_combo_li2: 'Каждое следующее идеальное попадание будет <strong>увеличивать размер</strong> платформы, возвращая ее к первоначальной ширине!',
-                rules_close: 'Понятно',
-                perfect: 'ИДЕАЛЬНО!',
-                resume: 'Продолжить',
-                restart: 'Заново',
-                main_menu: 'В меню',
-                game_over: 'Игра окончена',
-                your_score: 'Ваш счет',
-                record: 'Рекорд',
-                play_again: 'Играть снова',
-                main_menu_2: 'В меню',
-            }
-        };
+        let board = []; let score = 0; let movesCount = 0; let totalMoves = 0;
+        let gameMode = 'classic'; let isPaused = false;
+        let isProcessing = false; let stats = JSON.parse(localStorage.getItem('gemfall_stats')) || [];
+        
+        let dragStart = null; let TILE_SIZE = 0;
+        let lastTap = 0; 
 
-        class Stage {
-            // ... (no changes in this class)
-            constructor() {
-                this.container = document.getElementById('game');
-                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.setClearColor(0x000000, 0);
-                this.container.appendChild(this.renderer.domElement);
-                
-                this.scene = new THREE.Scene();
-                
-                const aspect = window.innerWidth / window.innerHeight;
-                const d = 20;
-                this.camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, -100, 1000);
-                this.camera.position.set(2, 2, 2);
-                this.camera.lookAt(new THREE.Vector3(0, 0, 0));
-                
-                this.light = new THREE.DirectionalLight(0xffffff, 0.5);
-                this.light.position.set(0, 499, 0);
-                this.scene.add(this.light);
-                
-                this.softLight = new THREE.AmbientLight(0xffffff, 0.4);
-                this.scene.add(this.softLight);
-
-                window.addEventListener('resize', () => this.onResize());
-                this.onResize();
-            }
-
-            setCamera(y, speed = 0.3) {
-                TweenLite.to(this.camera.position, speed, { y: y + 4, ease: Power1.easeInOut });
-                TweenLite.to(this.camera.lookAt, speed, { y: y, ease: Power1.easeInOut });
-            }
-
-            onResize() {
-                const viewSize = 30;
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.camera.left = window.innerWidth / -viewSize;
-                this.camera.right = window.innerWidth / viewSize;
-                this.camera.top = window.innerHeight / viewSize;
-                this.camera.bottom = window.innerHeight / -viewSize;
-                this.camera.updateProjectionMatrix();
-            }
-
-            render = () => this.renderer.render(this.scene, this.camera);
-            add = (elem) => this.scene.add(elem);
-            remove = (elem) => this.scene.remove(elem);
+        // --- Core Game Logic ---
+        function startGame(mode) {
+            gameMode = mode;
+            score = 0; movesCount = 0; totalMoves = 0;
+            isPaused = false; isProcessing = false;
+            updateScore(0);
+            updateMovesDisplay();
+            
+            mainMenuScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            
+            initBoard();
         }
 
-        class Block {
-             // ... (no changes in this class)
-            constructor(block, newDimensions = null) {
-                this.STATES = { ACTIVE: 'active', STOPPED: 'stopped', MISSED: 'missed' };
-                this.MOVE_AMOUNT = 12;
+        function initBoard() {
+            boardElement.innerHTML = '';
+            board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+            
+            resizeBoard();
 
-                this.targetBlock = block;
-                this.index = (this.targetBlock ? this.targetBlock.index : 0) + 1;
-                this.workingPlane = this.index % 2 ? 'x' : 'z';
-                this.workingDimension = this.index % 2 ? 'width' : 'depth';
-
-                this.dimension = {
-                    width: (newDimensions && newDimensions.width) || (this.targetBlock ? this.targetBlock.dimension.width : 10),
-                    height: 2,
-                    depth: (newDimensions && newDimensions.depth) || (this.targetBlock ? this.targetBlock.dimension.depth : 10),
-                };
-                
-                this.originalDimension = { ...this.dimension };
-
-                this.position = {
-                    x: this.targetBlock ? this.targetBlock.position.x : 0,
-                    y: this.dimension.height * this.index,
-                    z: this.targetBlock ? this.targetBlock.position.z : 0,
-                };
-                
-                this.colorOffset = this.targetBlock ? this.targetBlock.colorOffset : Math.round(Math.random() * 100);
-
-                if (!this.targetBlock) {
-                    this.color = new THREE.Color(0x333344);
-                } else {
-                    const offset = this.index + this.colorOffset;
-                    const r = Math.sin(0.3 * offset) * 55 + 200;
-                    const g = Math.sin(0.3 * offset + 2) * 55 + 200;
-                    const b = Math.sin(0.3 * offset + 4) * 55 + 200;
-                    this.color = new THREE.Color(r / 255, g / 255, b / 255);
-                }
-
-                this.state = this.index > 1 ? this.STATES.ACTIVE : this.STATES.STOPPED;
-                this.speed = -0.1 - (this.index * 0.005);
-                if (this.speed < -4) this.speed = -4;
-                this.direction = this.speed;
-
-                const geometry = new THREE.BoxGeometry(this.dimension.width, this.dimension.height, this.dimension.depth);
-                geometry.applyMatrix(new THREE.Matrix4().makeTranslation(this.dimension.width / 2, this.dimension.height / 2, this.dimension.depth / 2));
-                this.material = new THREE.MeshToonMaterial({ color: this.color.getHex(), shading: THREE.FlatShading });
-                this.mesh = new THREE.Mesh(geometry, this.material);
-                this.mesh.position.set(this.position.x, this.position.y, this.position.z);
-
-                if (this.state === this.STATES.ACTIVE) {
-                    this.position[this.workingPlane] = Math.random() > 0.5 ? -this.MOVE_AMOUNT : this.MOVE_AMOUNT;
-                }
-            }
-
-            reverseDirection = () => {
-                this.direction = this.direction > 0 ? this.speed : Math.abs(this.speed);
-            }
-
-            place() {
-                this.state = this.STATES.STOPPED;
-
-                let overlap = this.targetBlock.dimension[this.workingDimension] - Math.abs(this.position[this.workingPlane] - this.targetBlock.position[this.workingPlane]);
-
-                const blocksToReturn = {
-                    plane: this.workingPlane,
-                    direction: this.direction,
-                    bonus: false
-                };
-                
-                if (this.dimension[this.workingDimension] - overlap < 0.3) {
-                    blocksToReturn.bonus = true;
-                    this.dimension.width = this.targetBlock.dimension.width;
-                    this.dimension.depth = this.targetBlock.dimension.depth;
-                    overlap = this.targetBlock.dimension[this.workingDimension];
-                    this.position.x = this.targetBlock.position.x;
-                    this.position.z = this.targetBlock.position.z;
-                }
-
-                if (overlap > 0) {
-                    const choppedDimensions = { ...this.dimension };
-                    choppedDimensions[this.workingDimension] -= overlap;
-                    this.dimension[this.workingDimension] = overlap;
-
-                    const placedGeometry = new THREE.BoxGeometry(this.dimension.width, this.dimension.height, this.dimension.depth);
-                    placedGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(this.dimension.width / 2, this.dimension.height / 2, this.dimension.depth / 2));
-                    const placedMesh = new THREE.Mesh(placedGeometry, this.material);
-
-                    const choppedGeometry = new THREE.BoxGeometry(choppedDimensions.width, choppedDimensions.height, choppedDimensions.depth);
-                    choppedGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(choppedDimensions.width / 2, choppedDimensions.height / 2, choppedDimensions.depth / 2));
-                    const choppedMesh = new THREE.Mesh(choppedGeometry, this.material);
-
-                    const choppedPosition = { x: this.position.x, y: this.position.y, z: this.position.z };
-
-                    if (this.position[this.workingPlane] < this.targetBlock.position[this.workingPlane]) {
-                        this.position[this.workingPlane] = this.targetBlock.position[this.workingPlane];
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    // 14. ROWS - 1 теперь 9-й ряд
+                    if (r >= ROWS - 1) {
+                        createTile(r, c, 'unmovable');
                     } else {
-                        choppedPosition[this.workingPlane] += overlap;
+                        createTile(r, c, 'gem', getRandomColor());
                     }
-
-                    placedMesh.position.set(this.position.x, this.position.y, this.position.z);
-                    choppedMesh.position.set(choppedPosition.x, choppedPosition.y, choppedPosition.z);
-
-                    blocksToReturn.placed = placedMesh;
-                    if (!blocksToReturn.bonus) blocksToReturn.chopped = choppedMesh;
-                } else {
-                    this.state = this.STATES.MISSED;
                 }
-                
-                return blocksToReturn;
             }
-
-            tick() {
-                if (this.state === this.STATES.ACTIVE) {
-                    const value = this.position[this.workingPlane];
-                    if (value > this.MOVE_AMOUNT || value < -this.MOVE_AMOUNT) this.reverseDirection();
-                    this.position[this.workingPlane] += this.direction;
-                    this.mesh.position[this.workingPlane] = this.position[this.workingPlane];
+            while (true) {
+                // 15. Инициализация без бонусов
+                const { matches } = findMatches(true); // true = no bonuses
+                if (matches.size === 0) break;
+                matches.forEach(tile => {
+                    if (tile) { // Добавлена проверка
+                        tile.element.remove();
+                        createTile(tile.r, tile.c, 'gem', getRandomColor());
+                    }
+                });
+            }
+        }
+        
+        function resizeBoard() {
+            const boardWidth = boardElement.clientWidth;
+            TILE_SIZE = (boardWidth - (COLS + 1) * GAP) / COLS;
+            boardElement.querySelectorAll('.tile').forEach(tileEl => {
+                const r = parseInt(tileEl.dataset.r);
+                const c = parseInt(tileEl.dataset.c);
+                tileEl.style.width = `${TILE_SIZE}px`;
+                tileEl.style.height = `${TILE_SIZE}px`;
+                tileEl.style.left = `${GAP + c * (TILE_SIZE + GAP)}px`;
+                tileEl.style.top = `${GAP + r * (TILE_SIZE + GAP)}px`;
+            });
+        }
+        window.addEventListener('resize', resizeBoard);
+        
+        function createTile(r, c, type, color = null, bonus = null) {
+            const tileElement = document.createElement('div');
+            tileElement.classList.add('tile');
+            
+            const tileInner = document.createElement('div');
+            tileInner.classList.add('tile-inner');
+            tileElement.appendChild(tileInner);
+            
+            const tileData = { r, c, type, color, bonus, element: tileElement, id: `tile-${r}-${c}-${Math.random()}` };
+            board[r][c] = tileData;
+            
+            tileElement.dataset.r = r;
+            tileElement.dataset.c = c;
+            
+            if (type === 'gem') {
+                if (color) {
+                    // 16. ИСПОЛЬЗУЕМ КЛАССЫ ВМЕСТО СТИЛЕЙ
+                     tileInner.classList.add(color);
                 }
+                if (bonus) {
+                    tileElement.classList.add(bonus); // класс для логики
+                    tileInner.classList.add(bonus); // класс для PNG
+                    tileData.color = null; 
+                }
+            } else if (type === 'unmovable') {
+                tileElement.classList.add('unmovable');
+            }
+            
+            positionTile(tileData, r, c);
+            boardElement.appendChild(tileElement);
+            return tileData;
+        }
+        
+        function positionTile(tileData, r, c, isInitial = false) {
+            tileData.r = r; tileData.c = c;
+            tileData.element.dataset.r = r; tileData.element.dataset.c = c;
+            tileData.element.style.width = `${TILE_SIZE}px`;
+            tileData.element.style.height = `${TILE_SIZE}px`;
+            
+            const targetTop = GAP + r * (TILE_SIZE + GAP);
+            const targetLeft = GAP + c * (TILE_SIZE + GAP);
+
+            if (isInitial) {
+                 tileData.element.style.top = `${targetTop - boardElement.clientHeight}px`;
+                 tileData.element.style.left = `${targetLeft}px`;
+                 requestAnimationFrame(() => {
+                     tileData.element.style.top = `${targetTop}px`;
+                 });
+            } else {
+                 tileData.element.style.left = `${targetLeft}px`;
+                 tileData.element.style.top = `${targetTop}px`;
             }
         }
 
-        class Game {
-            constructor(ysdk) {
-                // --- Yandex SDK Properties ---
-                this.ysdk = ysdk;
-                this.player = null;
-                this.currentLang = 'en';
+        // --- ОБРАБОТЧИКИ СВАЙПОВ И ТАПОВ ---
+        boardElement.addEventListener('pointerdown', onPointerDown);
+        boardElement.addEventListener('pointermove', onPointerMove);
+        boardElement.addEventListener('pointerup', onPointerUp);
+        boardElement.addEventListener('pointerleave', onPointerUp); 
 
-                this.STATES = { MENU: 'menu', PLAYING: 'playing', PAUSED: 'paused', ENDED: 'ended', RESETTING: 'resetting' };
-                
-                this.stage = new Stage();
-                this.ui = {
-                    body: document.body,
-                    mainMenu: document.getElementById('main-menu'),
-                    rulesModal: document.getElementById('rules-modal'),
-                    inGameUI: document.getElementById('in-game-ui'),
-                    pauseMenu: document.getElementById('pause-menu'),
-                    gameOverMenu: document.getElementById('game-over-menu'),
-                    score: document.getElementById('score'),
-                    highScore: document.getElementById('high-score'),
-                    finalScore: document.getElementById('final-score'),
-                    gameOverHighScore: document.getElementById('game-over-high-score'),
-                    perfectPlacementText: document.getElementById('perfect-placement-text'),
-                    gameCanvas: document.getElementById('game')
-                };
-                this.buttons = {
-                    start: document.getElementById('start-button'),
-                    rules: document.getElementById('rules-button'),
-                    closeRules: document.getElementById('close-rules-button'),
-                    pause: document.getElementById('pause-button'),
-                    resume: document.getElementById('resume-button'),
-                    restart: document.getElementById('restart-button'),
-                    menu: document.getElementById('menu-button'),
-                    restartGameOver: document.getElementById('restart-game-over-button'),
-                    menuGameOver: document.getElementById('menu-game-over-button')
-                };
+        function onPointerDown(e) {
+            if (isProcessing || isPaused) return;
+            // 17. ВОСПРОИЗВОДИМ ЗВУК ТАПА
+            playSound('tap'); 
+            
+            const tileElement = e.target.closest('.tile');
+            if (!tileElement) return;
+            
+            const r = parseInt(tileElement.dataset.r);
+            const c = parseInt(tileElement.dataset.c);
+            const tile = board[r]?.[c];
 
-                this.newBlocks = new THREE.Group();
-                this.placedBlocks = new THREE.Group();
-                this.choppedBlocks = new THREE.Group();
-                this.perfectSliceGroup = new THREE.Group();
-                this.starsGroup = new THREE.Group();
-                this.stage.add(this.newBlocks);
-                this.stage.add(this.placedBlocks);
-                this.stage.add(this.choppedBlocks);
-                this.stage.add(this.perfectSliceGroup);
-                this.stage.scene.add(this.starsGroup);
-                
-                this.perfectCombo = 0;
-                this.initialBlockSize = { width: 10, depth: 10 };
-                this.blocksSinceColorChange = 0;
-                
-                this.bgColors = {
-                    top: new THREE.Color(0x1a237e),
-                    bottom: new THREE.Color(0x0d47a1),
-                    targetTop: new THREE.Color(0x1a237e),
-                    targetBottom: new THREE.Color(0x0d47a1)
-                };
-
-                this.init();
+            if (tile && tile.type === 'gem') {
+                dragStart = { r, c, x: e.clientX, y: e.clientY, moved: false };
             }
+        }
 
-            async init() {
-                this.setLanguage();
-                await this.initPlayer();
-                this.showBannerAd();
-                this.addStars();
-                this.bindEvents();
-                this.setState(this.STATES.MENU);
-                this.tick();
+        function onPointerMove(e) {
+            if (!dragStart) return;
+            const dx = e.clientX - dragStart.x;
+            const dy = e.clientY - dragStart.y;
+
+            if (!dragStart.moved && (Math.abs(dx) > TILE_SIZE * 0.3 || Math.abs(dy) > TILE_SIZE * 0.3)) {
+                dragStart.moved = true; 
+                let dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+                handleSwipe(dragStart.r, dragStart.c, dir);
+                dragStart = null; 
             }
+        }
 
-            // --- Yandex SDK Integration ---
-            setLanguage() {
-                const lang = this.ysdk.environment.i18n.lang;
-                this.currentLang = (lang === 'ru') ? 'ru' : 'en';
-                document.documentElement.lang = this.currentLang;
+        async function onPointerUp() {
+            if (dragStart && !dragStart.moved) {
+                const tile = board[dragStart.r][dragStart.c];
+                const currentTime = new Date().getTime();
                 
-                document.querySelectorAll('[data-lang-key]').forEach(elem => {
-                    const key = elem.dataset.langKey;
-                    if (translations[this.currentLang] && translations[this.currentLang][key]) {
-                        elem.innerHTML = translations[this.currentLang][key];
+                if (currentTime - lastTap < 300) { 
+                    if (tile && tile.bonus) {
+                        isProcessing = true;
+                        movesCount++; 
+                        totalMoves++;
+                        updateMovesDisplay();
+                        
+                        await handleBonusActivation(new Set([tile])); 
+                        
+                        isProcessing = false;
+                        checkGameStatus();
                     }
-                });
-            }
-
-            async initPlayer() {
-                try {
-                    this.player = await this.ysdk.getPlayer();
-                    if (this.player.getMode() === 'lite') {
-                        // Player is not authorized, use localStorage
-                        await this.loadHighScore(false);
-                    } else {
-                        // Player is authorized, use Yandex Cloud Save
-                        await this.loadHighScore(true);
-                    }
-                } catch (error) {
-                    console.error('Player init failed:', error);
-                    // Fallback to localStorage on error
-                    await this.loadHighScore(false);
                 }
+                lastTap = currentTime;
             }
+            dragStart = null; 
+        }
+        
+        async function handleSwipe(r, c, direction) {
+            if (isProcessing) return; 
+            let r2 = r, c2 = c;
+            if (direction === 'left') c2--; else if (direction === 'right') c2++;
+            else if (direction === 'up') r2--; else if (direction === 'down') r2++;
+            
+            if (r2 < 0 || r2 >= ROWS || c2 < 0 || c2 >= COLS) return;
+            const tile1 = board[r][c], tile2 = board[r2][c2];
+            
+            if (!tile1 || !tile2 || tile1.type !== 'gem' || tile2.type !== 'gem') return;
+            if (tile1.type === 'unmovable' || tile2.type === 'unmovable') return;
 
-            async saveHighScore(isAuthorized) {
-                const dataString = this.highScore.toString();
-                if (isAuthorized && this.player) {
-                    try {
-                        await this.player.setData({ highScore: this.highScore });
-                    } catch (e) {
-                        console.error('Yandex Cloud Save failed:', e);
-                        localStorage.setItem('TowerBlocksHighScore', dataString); // Fallback
-                    }
+            isProcessing = true;
+            await animateSwap(tile1, tile2);
+            
+            const tile1Bonus = tile1.bonus; 
+            const tile2Bonus = tile2.bonus; 
+
+            // 18. ЛОГИКА КОМБО "БОМБА + РАКЕТА"
+            const isCombo = (tile1Bonus === 'rocket' && tile2Bonus === 'bomb') || (tile1Bonus === 'bomb' && tile2Bonus === 'rocket');
+            
+            if (isCombo) {
+                movesCount++; totalMoves++; updateMovesDisplay();
+                // tile1 - это тот, что был на r,c. Он теперь на r2,c2.
+                // tile2 - тот, что был на r2,c2. Он теперь на r,c.
+                // Передаем оба тайла, чтобы их можно было удалить.
+                await handleComboActivation(tile1, tile2); 
+            
+            } else if (tile1Bonus && !tile2Bonus) {
+                movesCount++; totalMoves++; updateMovesDisplay();
+                await handleBonusActivation(new Set([tile1])); 
+            } else if (!tile1Bonus && tile2Bonus) {
+                movesCount++; totalMoves++; updateMovesDisplay();
+                await handleBonusActivation(new Set([tile2]));
+            } else if (tile1Bonus && tile2Bonus) {
+                // Комбо Бонус + Бонус (пока активируем оба)
+                movesCount++; totalMoves++; updateMovesDisplay();
+                await handleBonusActivation(new Set([tile1, tile2])); 
+            } else {
+                const { matches } = findMatches();
+                if (matches.size > 0) {
+                    movesCount++;
+                    totalMoves++;
+                    updateMovesDisplay();
+                    await processAllMatches({ r: r2, c: c2 }); 
                 } else {
-                    localStorage.setItem('TowerBlocksHighScore', dataString);
+                    await animateSwap(tile1, tile2); 
                 }
             }
+            
+            isProcessing = false;
+            checkGameStatus(); 
+        }
 
-            async loadHighScore(isAuthorized) {
-                let loadedData = '0';
-                if (isAuthorized && this.player) {
-                    try {
-                        const data = await this.player.getData(['highScore']);
-                        if (data.highScore) {
-                            loadedData = data.highScore.toString();
-                        }
-                    } catch (e) {
-                        console.error('Yandex Cloud Load failed:', e);
-                        loadedData = localStorage.getItem('TowerBlocksHighScore') || '0'; // Fallback
+        function animateSwap(tile1, tile2) {
+            const r1 = tile1.r, c1 = tile1.c;
+            const r2 = tile2.r, c2 = tile2.c;
+            
+            board[r1][c1] = tile2;
+            board[r2][c2] = tile1;
+
+            positionTile(tile1, r2, c2);
+            positionTile(tile2, r1, c1);
+            
+            return new Promise(resolve => setTimeout(resolve, 300));
+        }
+
+        // --- ФУНКЦИИ АКТИВАЦИИ И АНИМАЦИИ БОНУСОВ ---
+        async function animateRocket(r, c) {
+            playSound('rocket'); // Звук ракеты
+            const rowEffect = document.createElement('div');
+            rowEffect.className = 'rocket-effect row';
+            rowEffect.style.top = `${GAP + r * (TILE_SIZE + GAP) + TILE_SIZE * 0.15 / 2}px`;
+            rowEffect.style.left = `${GAP}px`;
+            rowEffect.style.width = `${COLS * (TILE_SIZE + GAP) - GAP}px`;
+            rowEffect.style.height = `${TILE_SIZE * 0.85}px`;
+            
+            const colEffect = document.createElement('div');
+            colEffect.className = 'rocket-effect col';
+            colEffect.style.top = `${GAP}px`;
+            colEffect.style.left = `${GAP + c * (TILE_SIZE + GAP) + TILE_SIZE * 0.15 / 2}px`;
+            colEffect.style.width = `${TILE_SIZE * 0.85}px`;
+            colEffect.style.height = `${ROWS * (TILE_SIZE + GAP) - GAP}px`;
+            
+            boardElement.appendChild(rowEffect); 
+            boardElement.appendChild(colEffect);
+            
+            await new Promise(resolve => setTimeout(() => { 
+                rowEffect.remove(); 
+                colEffect.remove(); 
+                resolve(); 
+            }, 300));
+        }
+
+        async function collectTilesFromBonuses(initialActivators, masterDestroySet) {
+            const queue = [...initialActivators].filter(t => t && t.bonus);
+            const processed = new Set(queue);
+            let rocketAnimations = []; 
+            let bombSoundPlayed = false; // 19. ЗВУК БОМБЫ ОДИН РАЗ
+
+            while (queue.length > 0) {
+                const tile = queue.shift();
+                if (!tile) continue; 
+                
+                if (tile.bonus === 'bomb') {
+                    if (!bombSoundPlayed) {
+                        playSound('bomb');
+                        bombSoundPlayed = true;
                     }
-                } else {
-                    loadedData = localStorage.getItem('TowerBlocksHighScore') || '0';
-                }
-                this.highScore = parseInt(loadedData, 10);
-                this.ui.highScore.innerText = this.highScore;
-            }
-            
-            showBannerAd() {
-                if (this.ysdk) {
-                     this.ysdk.adv.showBannerAdv();
-                }
-            }
-            
-            showInterstitialAd() {
-                 if(this.ysdk) {
-                    this.ysdk.adv.showFullscreenAdv({
-                        callbacks: {
-                            onOpen: () => console.log('Interstitial ad opened.'),
-                            onClose: (wasShown) => console.log(`Interstitial ad closed. Was shown: ${wasShown}`),
-                            onError: (error) => console.error('Interstitial ad error:', error)
+                    for (let r = Math.max(0, tile.r - 1); r <= Math.min(ROWS - 1, tile.r + 1); r++) {
+                        for (let c = Math.max(0, tile.c - 1); c <= Math.min(COLS - 1, tile.c + 1); c++) {
+                            const neighbor = board[r]?.[c]; 
+                            if (neighbor && !masterDestroySet.has(neighbor)) { 
+                                masterDestroySet.add(neighbor);
+                                if (neighbor.bonus && !processed.has(neighbor)) { 
+                                    processed.add(neighbor); 
+                                    queue.push(neighbor); 
+                                }
+                            }
                         }
-                    });
-                }
-            }
-
-            bindEvents() {
-                this.buttons.start.addEventListener('click', () => this.startGame());
-                this.buttons.rules.addEventListener('click', () => this.ui.rulesModal.classList.remove('hidden'));
-                this.buttons.closeRules.addEventListener('click', () => this.ui.rulesModal.classList.add('hidden'));
-                this.buttons.pause.addEventListener('click', () => this.togglePause());
-                this.buttons.resume.addEventListener('click', () => this.togglePause());
-                this.buttons.restart.addEventListener('click', () => this.restartGame());
-                this.buttons.menu.addEventListener('click', () => this.goToMenu());
-                this.buttons.restartGameOver.addEventListener('click', () => this.restartGame());
-                this.buttons.menuGameOver.addEventListener('click', () => this.goToMenu());
-                
-                window.addEventListener('keydown', (e) => { if (e.keyCode === 32) this.onAction(); });
-                this.stage.container.addEventListener('click', () => this.onAction());
-                this.stage.container.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    this.onAction();
-                });
-            }
-
-            setState(newState) {
-                this.state = newState;
-                
-                this.ui.mainMenu.classList.add('hidden');
-                this.ui.rulesModal.classList.add('hidden');
-                this.ui.inGameUI.classList.add('hidden');
-                this.ui.pauseMenu.classList.add('hidden');
-                this.ui.gameOverMenu.classList.add('hidden');
-                this.ui.gameCanvas.style.display = 'none';
-                document.getElementById('container').className = 'container';
-                
-                this.showBannerAd();
-
-                switch (newState) {
-                    case this.STATES.MENU:
-                        this.ui.mainMenu.classList.remove('hidden');
-                        this.bgColors.targetTop.setHex(0x1a237e);
-                        this.bgColors.targetBottom.setHex(0x0d47a1);
-                        break;
-                    case this.STATES.PLAYING:
-                        this.ui.inGameUI.classList.remove('hidden');
-                        this.ui.gameCanvas.style.display = 'block';
-                        document.getElementById('container').classList.add('playing');
-                        break;
-                    case this.STATES.PAUSED:
-                        this.ui.inGameUI.classList.remove('hidden');
-                        this.ui.pauseMenu.classList.remove('hidden');
-                        this.ui.gameCanvas.style.display = 'block';
-                        break;
-                    case this.STATES.ENDED:
-                        this.ui.inGameUI.classList.remove('hidden');
-                        this.ui.gameOverMenu.classList.remove('hidden');
-                        this.ui.gameCanvas.style.display = 'block';
-                        document.getElementById('container').classList.add('ended');
-                        break;
-                }
-            }
-
-            onAction() {
-                if (this.state === this.STATES.PLAYING) {
-                    this.placeBlock();
-                }
-            }
-            
-            togglePause() {
-                if (this.state === this.STATES.PLAYING) {
-                    this.setState(this.STATES.PAUSED);
-                } else if (this.state === this.STATES.PAUSED) {
-                    this.setState(this.STATES.PLAYING);
-                }
-            }
-
-            startGame() {
-                if (this.state !== this.STATES.PLAYING) {
-                    this.reset();
-                    this.setState(this.STATES.PLAYING);
-                    this.addBlock();
-                }
-            }
-            
-            goToMenu() {
-                this.setState(this.STATES.RESETTING);
-                setTimeout(() => {
-                    this.reset();
-                    this.setState(this.STATES.MENU);
-                }, 500);
-            }
-
-            restartGame() {
-                this.setState(this.STATES.RESETTING);
-                const oldBlocks = this.placedBlocks.children;
-                const removeSpeed = 0.2;
-                const delayAmount = 0.02;
-
-                for (let i = 0; i < oldBlocks.length; i++) {
-                    TweenLite.to(oldBlocks[i].scale, removeSpeed, { x: 0, y: 0, z: 0, delay: (oldBlocks.length - i) * delayAmount, ease: Power1.easeIn });
-                }
-                
-                setTimeout(() => {
-                    this.startGame();
-                }, (oldBlocks.length * delayAmount + removeSpeed) * 1000);
-            }
-            
-            reset() {
-                [this.newBlocks, this.placedBlocks, this.choppedBlocks, this.perfectSliceGroup].forEach(group => {
-                    while(group.children.length > 0) group.remove(group.children[0]);
-                });
-                this.blocks = [];
-                this.perfectCombo = 0;
-                this.blocksSinceColorChange = 0;
-                this.addBlock(); 
-                this.stage.setCamera(2, 0);
-                this.ui.score.innerText = '0';
-            }
-
-            placeBlock() {
-                const currentBlock = this.blocks[this.blocks.length - 1];
-                if (!currentBlock || currentBlock.state !== currentBlock.STATES.ACTIVE) return;
-
-                const newBlocks = currentBlock.place();
-                this.newBlocks.remove(currentBlock.mesh);
-
-                if (newBlocks.placed) {
-                    this.placedBlocks.add(newBlocks.placed);
-                    this.blocksSinceColorChange++;
+                    }
+                } else if (tile.bonus === 'rocket') {
+                    rocketAnimations.push(animateRocket(tile.r, tile.c)); 
                     
-                    if(this.blocksSinceColorChange >= 5) {
-                        this.blocksSinceColorChange = 0;
-                        this.bgColors.targetBottom.copy(this.bgColors.targetTop);
-                        this.bgColors.targetTop.copy(this.getPastelColor(currentBlock.color));
-                    }
-
-
-                    if (newBlocks.bonus) {
-                        this.perfectCombo++;
-                        
-                        if (this.perfectCombo >= 6) {
-                            const comboBonus = (this.perfectCombo - 5) * 0.25;
-                            const newWidth = Math.min(this.initialBlockSize.width, currentBlock.originalDimension.width + comboBonus);
-                            const newDepth = Math.min(this.initialBlockSize.depth, currentBlock.originalDimension.depth + comboBonus);
-
-                            currentBlock.dimension.width = newWidth;
-                            currentBlock.dimension.depth = newDepth;
-                            
-                            newBlocks.placed.scale.set(
-                                newWidth / currentBlock.originalDimension.width,
-                                1,
-                                newDepth / currentBlock.originalDimension.depth
-                            );
+                    for (let c = 0; c < COLS; c++) { 
+                        const n = board[tile.r]?.[c]; 
+                        if (n && !masterDestroySet.has(n)) { 
+                            masterDestroySet.add(n); 
+                            if (n.bonus && !processed.has(n)) { processed.add(n); queue.push(n); }
                         }
+                    }
+                    for (let r = 0; r < ROWS; r++) { 
+                        const n = board[r]?.[tile.c]; 
+                        if (n && !masterDestroySet.has(n)) { 
+                            masterDestroySet.add(n); 
+                            if (n.bonus && !processed.has(n)) { processed.add(n); queue.push(n); }
+                        }
+                    }
+                }
+            }
+            
+            if (rocketAnimations.length > 0) {
+                await Promise.all(rocketAnimations);
+            }
+        }
+
+        // 20. НОВАЯ ФУНКЦИЯ КОМБО
+        async function handleComboActivation(tile1, tile2) {
+            playSound('combo');
+            const tilesToDestroy = new Set([tile1, tile2]); // Сами бонусы тоже уничтожаются
+            
+            // Центр взрыва - это куда прилетел tile1
+            const centerR = tile1.r;
+            const centerC = tile1.c;
+
+            // Анимация взрыва
+            const comboEffect = document.createElement('div');
+            comboEffect.className = 'combo-effect';
+            comboEffect.style.width = `${TILE_SIZE * 3}px`; 
+            comboEffect.style.height = `${TILE_SIZE * 3}px`;
+            comboEffect.style.top = `${tile1.element.offsetTop - TILE_SIZE}px`; 
+            comboEffect.style.left = `${tile1.element.offsetLeft - TILE_SIZE}px`;
+            boardElement.appendChild(comboEffect);
+            await new Promise(resolve => setTimeout(() => { comboEffect.remove(); resolve(); }, 400));
+            
+            // 3 ряда
+            for(let r = Math.max(0, centerR - 1); r <= Math.min(ROWS - 1, centerR + 1); r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if(board[r][c]) tilesToDestroy.add(board[r][c]);
+                }
+            }
+            // 3 столбца
+            for(let c = Math.max(0, centerC - 1); c <= Math.min(COLS - 1, centerC + 1); c++) {
+                for (let r = 0; r < ROWS; r++) {
+                    if(board[r][c]) tilesToDestroy.add(board[r][c]);
+                }
+            }
+            
+            // Собираем цепные реакции от других бонусов
+            await collectTilesFromBonuses(tilesToDestroy, tilesToDestroy);
+            
+            score += tilesToDestroy.size * 10;
+            updateScore(score);
+            
+            await animateMatches(tilesToDestroy);
+            await dropAndRefill();
+            await processAllMatches();
+        }
+
+        async function handleBonusActivation(bonuses) {
+            const tilesToDestroy = new Set(bonuses);
+            await collectTilesFromBonuses(bonuses, tilesToDestroy);
+            
+            score += tilesToDestroy.size * 10;
+            updateScore(score);
+            
+            await animateMatches(tilesToDestroy);
+            await dropAndRefill();
+            await processAllMatches();
+        }
+        
+        async function processAllMatches(swappedCoords = null) {
+            let firstLoop = true;
+            
+            while (true) {
+                // 21. ПЕРЕПИСАНА ЛОГИКА ПОИСКА БОНУСОВ
+                let { matches, bonusInfo } = findMatches();
+                if (matches.size === 0) break;
+                
+                playSound('match');
+                
+                let bonusToCreate = null;
+                if (bonusInfo.length > 0) {
+                    let creationTile = null;
+                    
+                    // 1. Приоритет: тайл, которым свайпнули
+                    if (firstLoop && swappedCoords) {
+                        const swappedTile = board[swappedCoords.r]?.[swappedCoords.c];
+                        if (swappedTile) {
+                            // Ищем *лучший* бонус, связанный с этим тайлом
+                            const bestBonus = bonusInfo
+                                .filter(b => b.tiles.has(swappedTile))
+                                .sort((a, b) => (b.type === 'rocket' ? 1 : 0) - (a.type === 'rocket' ? 1 : 0)) // rocket > bomb
+                                [0];
+                            
+                            if (bestBonus) {
+                                creationTile = swappedTile;
+                                bonusToCreate = { r: creationTile.r, c: creationTile.c, type: bestBonus.type };
+                                // Удаляем *все* тайлы этого бонуса из матчей, чтобы они не создали другой бонус
+                                bestBonus.tiles.forEach(t => matches.delete(t));
+                            }
+                        }
+                    }
+                    
+                    // 2. Если свайп не создал бонус, ищем лучший бонус из каскада
+                    if (!bonusToCreate && bonusInfo.length > 0) {
+                        const bestBonus = bonusInfo.sort((a, b) => (b.type === 'rocket' ? 1 : 0) - (a.type === 'rocket' ? 1 : 0))[0];
                         
-                        this.showPerfectPlacementText();
-                        this.triggerVibration();
-                        this.triggerPerfectSlice(newBlocks.placed.position, currentBlock.dimension);
-                    } else {
-                        this.perfectCombo = 0;
+                        // Ищем тайл из этого бонуса, который все еще есть в `matches`
+                        creationTile = [...bestBonus.tiles].find(t => matches.has(t));
+                        
+                        if (creationTile) {
+                             bonusToCreate = { r: creationTile.r, c: creationTile.c, type: bestBonus.type };
+                             bestBonus.tiles.forEach(t => matches.delete(t));
+                        }
                     }
                 }
                 
-                if (newBlocks.chopped) {
-                    this.choppedBlocks.add(newBlocks.chopped);
-                    const positionParams = { y: '-=30', ease: Power1.easeIn, onComplete: () => this.choppedBlocks.remove(newBlocks.chopped) };
-                    const plane = newBlocks.plane;
-                    if (newBlocks.chopped.position[plane] > newBlocks.placed.position[plane]) {
-                        positionParams[plane] = `+=${40 * Math.abs(newBlocks.direction)}`;
-                    } else {
-                        positionParams[plane] = `-=${40 * Math.abs(newBlocks.direction)}`;
+                firstLoop = false; 
+                // --- КОНЕЦ ЛОГИКИ БОНУСОВ ---
+                
+                const tilesToDestroy = new Set(matches);
+                
+                const unmovableToDestroy = findAdjacentUnmovables(matches); 
+                unmovableToDestroy.forEach(t => tilesToDestroy.add(t));
+                
+                await collectTilesFromBonuses(matches, tilesToDestroy); 
+                
+                score += tilesToDestroy.size * 10;
+                updateScore(score);
+
+                // Тайлы, которые станут бонусами, не уничтожаются
+                if (bonusToCreate) {
+                    const tile = board[bonusToCreate.r][bonusToCreate.c];
+                    if (tile) tilesToDestroy.delete(tile);
+                }
+                
+                await animateMatches(tilesToDestroy);
+                
+                if (bonusToCreate) {
+                    const tile = board[bonusToCreate.r]?.[bonusToCreate.c]; 
+                    if (tile) { 
+                       const tileInner = tile.element.querySelector('.tile-inner');
+                       // Сброс классов (удаляем 'gem-red' и т.д.)
+                       tileInner.className = 'tile-inner';
+                       
+                       tile.bonus = bonusToCreate.type;
+                       tile.color = null; 
+                       
+                       tile.element.classList.add(bonusToCreate.type);
+                       tileInner.classList.add(bonusToCreate.type);
+                       tileInner.classList.add('bonus-create'); // Анимация
+                       
+                       setTimeout(() => tileInner.classList.remove('bonus-create'), 400);
                     }
-                    TweenLite.to(newBlocks.chopped.position, 1, positionParams);
-                }
-
-                this.addBlock();
-            }
-
-            addBlock() {
-                const lastBlock = this.blocks.length > 0 ? this.blocks[this.blocks.length - 1] : null;
-                if (lastBlock && lastBlock.state === lastBlock.STATES.MISSED) {
-                    return this.endGame();
                 }
                 
-                const score = Math.max(0, this.blocks.length - 1);
-                this.ui.score.innerText = String(score);
-
-                let newDimensions = null;
-                if (this.perfectCombo >= 6 && lastBlock) {
-                    newDimensions = {
-                        width: lastBlock.dimension.width,
-                        depth: lastBlock.dimension.depth
-                    };
-                }
-
-                const newKidOnTheBlock = new Block(lastBlock, newDimensions);
-                this.blocks.push(newKidOnTheBlock);
-                
-                if (newKidOnTheBlock.state === newKidOnTheBlock.STATES.ACTIVE) {
-                    this.newBlocks.add(newKidOnTheBlock.mesh);
-                } else {
-                    this.placedBlocks.add(newKidOnTheBlock.mesh);
-                }
-
-                this.stage.setCamera(this.blocks.length * 2);
+                await dropAndRefill();
             }
+            checkGameStatus();
+        }
+        
+        // 22. ПОЛНОСТЬЮ ПЕРЕПИСАНА findMatches
+        function findMatches(noBonuses = false) {
+            const matches = new Set();
+            const bonusInfo = [];
             
-            showPerfectPlacementText() {
-                const text = this.ui.perfectPlacementText;
-                text.style.transform = 'translateY(20px)';
-                TweenLite.to(text.style, 0.3, { opacity: 1 });
-                TweenLite.to(text, 0.4, { transform: 'translateY(0px)' });
-                TweenLite.to(text.style, 0.3, { opacity: 0, delay: 0.5 });
-            }
+            const processedH = new Set(); // Для горизонтальных матчей
+            const processedV = new Set(); // Для вертикальных матчей
+            const crossTiles = new Set(); // Тайлы на пересечении (L/T)
 
-            triggerVibration() {
-                if (navigator.vibrate) {
-                    navigator.vibrate(100);
-                }
-            }
+            // --- 1. Поиск L/T (Ракеты) ---
+            if (!noBonuses) {
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        const tile = board[r][c];
+                        if (!tile || !tile.color) continue;
 
-            triggerPerfectSlice(position, dimension) {
-                const sliceHeight = 0.1;
-                const padding = 1.5;
-                const sliceGeometry = new THREE.BoxGeometry(dimension.width + padding, sliceHeight, dimension.depth + padding);
-                const sliceMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true });
-                const sliceMesh = new THREE.Mesh(sliceGeometry, sliceMaterial);
-                
-                sliceMesh.position.set(position.x + dimension.width / 2, position.y + (dimension.height/2), position.z + dimension.depth / 2);
-                sliceMesh.scale.set(0, 1, 0);
-                this.perfectSliceGroup.add(sliceMesh);
-                
-                TweenLite.to(sliceMesh.scale, 0.2, { x: 1, z: 1, ease: Power1.easeOut });
-                TweenLite.to(sliceMesh.scale, 0.3, { x: 0, z: 0, ease: Power1.easeIn, delay: 0.2, onComplete: () => {
-                    this.perfectSliceGroup.remove(sliceMesh);
-                }});
-            }
-            
-            addStars() {
-                const starGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-                const starMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-                for(let i = 0; i < 150; i++) {
-                    const star = new THREE.Mesh(starGeometry, starMaterial);
-                    star.position.set(
-                        (Math.random() - 0.5) * 200,
-                        (Math.random() - 0.5) * 200,
-                        (Math.random() - 0.5) * 200
-                    );
-                    this.starsGroup.add(star);
-                }
-            }
-            
-            animateStars() {
-                const cameraY = this.stage.camera.position.y;
-                // Move the entire starfield with the camera
-                this.starsGroup.position.y = cameraY;
-                this.starsGroup.rotation.y += 0.0002;
+                        const hMatch = getLine(r, c, 0, 1).concat(getLine(r, c, 0, -1).slice(1));
+                        const vMatch = getLine(r, c, 1, 0).concat(getLine(r, c, -1, 0).slice(1));
 
-                // Wrap stars to create an infinite field
-                this.starsGroup.children.forEach(star => {
-                    if (star.position.y + cameraY < cameraY - 100) {
-                        star.position.y += 200;
+                        if (hMatch.length >= 3 && vMatch.length >= 3) {
+                            const crossSet = new Set([...hMatch, ...vMatch]);
+                            bonusInfo.push({ type: 'rocket', tiles: crossSet });
+                            crossSet.forEach(t => {
+                                matches.add(t);
+                                processedH.add(t);
+                                processedV.add(t);
+                                crossTiles.add(t);
+                            });
+                        }
                     }
-                     if (star.position.y + cameraY > cameraY + 100) {
-                        star.position.y -= 200;
+                }
+            }
+
+            // --- 2. Поиск Горизонтальных (4-5) ---
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const tile = board[r][c];
+                    if (!tile || !tile.color || processedH.has(tile)) continue;
+                    
+                    const hMatch = getLine(r, c, 0, 1);
+                    hMatch.forEach(t => processedH.add(t)); // Обработали
+                    
+                    if (hMatch.length >= 3) hMatch.forEach(t => matches.add(t));
+                    
+                    if (!noBonuses && hMatch.length >= 4) {
+                        // Убедимся, что это не часть L/T
+                        const isCross = hMatch.some(t => crossTiles.has(t));
+                        if (!isCross) {
+                            bonusInfo.push({ type: hMatch.length === 4 ? 'bomb' : 'rocket', tiles: new Set(hMatch) });
+                        }
+                    }
+                }
+            }
+            
+            // --- 3. Поиск Вертикальных (4-5) ---
+             for (let c = 0; c < COLS; c++) {
+                for (let r = 0; r < ROWS; r++) {
+                    const tile = board[r][c];
+                    if (!tile || !tile.color || processedV.has(tile)) continue;
+                    
+                    const vMatch = getLine(r, c, 1, 0);
+                    vMatch.forEach(t => processedV.add(t)); // Обработали
+                    
+                    if (vMatch.length >= 3) vMatch.forEach(t => matches.add(t));
+                    
+                    if (!noBonuses && vMatch.length >= 4) {
+                        const isCross = vMatch.some(t => crossTiles.has(t));
+                        if (!isCross) {
+                            bonusInfo.push({ type: vMatch.length === 4 ? 'bomb' : 'rocket', tiles: new Set(vMatch) });
+                        }
+                    }
+                }
+            }
+            
+            return { matches, bonusInfo };
+        }
+
+        function getLine(r, c, dr, dc) {
+            const line = [];
+            const color = board[r][c]?.color;
+            if (!color) return line;
+            let cr = r, cc = c;
+            while(cr >= 0 && cr < ROWS && cc >= 0 && cc < COLS && board[cr][cc]?.color === color) {
+                line.push(board[cr][cc]);
+                cr += dr; cc += dc;
+            }
+            return line;
+        }
+
+        function findAdjacentUnmovables(matches) {
+            const toDestroy = new Set();
+            for(const tile of matches) {
+                if (!tile) continue; 
+                const { r, c } = tile;
+                [[r-1,c], [r+1,c], [r,c-1], [r,c+1]].forEach(([nr, nc]) => {
+                    if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc]?.type === 'unmovable') {
+                        toDestroy.add(board[nr][nc]);
                     }
                 });
             }
-
-            getPastelColor(color) {
-                const tempColor = color.clone();
-                const white = new THREE.Color(0xffffff);
-                tempColor.lerp(white, 0.75); // Mix with 75% white for a milkier look
-                return tempColor;
-            }
-
-            updateBackground() {
-                // Slower lerp for a much smoother transition
-                this.bgColors.top.lerp(this.bgColors.targetTop, 0.005);
-                this.bgColors.bottom.lerp(this.bgColors.targetBottom, 0.005);
-                
-                const topHex = '#' + this.bgColors.top.getHexString();
-                const bottomHex = '#' + this.bgColors.bottom.getHexString();
-                
-                document.documentElement.style.setProperty('--bg-top', topHex);
-                document.documentElement.style.setProperty('--bg-bottom', bottomHex);
-            }
-
-            async endGame() {
-                const score = this.blocks.length - 2;
-                if (score > this.highScore) {
-                    this.highScore = score;
-                    this.ui.highScore.innerText = this.highScore;
-                    const isAuthorized = this.player && this.player.getMode() !== 'lite';
-                    await this.saveHighScore(isAuthorized);
+            return toDestroy;
+        }
+        
+        function animateMatches(tiles) {
+            tiles.forEach(tile => {
+                if (tile && tile.element && board[tile.r]?.[tile.c] === tile) {
+                    tile.element.classList.add('match');
+                    board[tile.r][tile.c] = null;
                 }
-                this.ui.finalScore.innerText = score;
-                this.ui.gameOverHighScore.innerText = this.highScore;
-                this.setState(this.STATES.ENDED);
-                
-                if(score > 50) {
-                    this.showInterstitialAd();
-                }
-            }
+            });
+            return new Promise(resolve => setTimeout(() => {
+                tiles.forEach(tile => tile?.element?.remove()); 
+                resolve();
+            }, 400));
+        }
 
-            tick = () => {
-                this.animateStars();
-
-                if (this.state === this.STATES.PLAYING || this.state === this.STATES.ENDED) {
-                    const topBlock = this.blocks[this.blocks.length - 1];
-                    if (topBlock && topBlock.state === topBlock.STATES.ACTIVE) {
-                        topBlock.tick();
+        async function dropAndRefill() {
+            for (let c = 0; c < COLS; c++) {
+                let emptyRow = -1;
+                for (let r = ROWS - 1; r >= 0; r--) {
+                    if (board[r][c] === null && emptyRow === -1) emptyRow = r;
+                    else if (board[r][c] !== null && emptyRow !== -1) {
+                        const tile = board[r][c];
+                        board[emptyRow][c] = tile;
+                        board[r][c] = null;
+                        positionTile(tile, emptyRow, c);
+                        emptyRow--;
                     }
                 }
-                this.updateBackground();
-                this.stage.render();
-                requestAnimationFrame(this.tick);
             }
+            await new Promise(r => setTimeout(r, 300));
+            
+            for (let c = 0; c < COLS; c++) {
+                for (let r = ROWS - 1; r >= 0; r--) {
+                    if (board[r][c] === null) {
+                        const newTile = createTile(r, c, 'gem', getRandomColor());
+                        positionTile(newTile, r, c, true);
+                    }
+                }
+            }
+            await new Promise(r => setTimeout(r, 300));
         }
 
-        window.onload = () => {
-             YaGames.init().then(ysdk => {
-                console.log('Yandex SDK initialized');
-                window.ysdk = ysdk;
-                window.game = new Game(ysdk);
-            }).catch(console.error);
+        // --- Utility Functions ---
+        function getRandomColor() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
+        function updateScore(newScore) { score = newScore; scoreElement.textContent = score; }
+        function updateMovesDisplay() {
+            const riseThreshold = gameMode === 'classic' ? 5 : 2;
+            const progress = (movesCount % riseThreshold) / riseThreshold * 100;
+            riseProgressBar.style.width = `${progress}%`;
+            movesCountElement.textContent = totalMoves;
+            
+            if (totalMoves > 0 && movesCount > 0 && movesCount % riseThreshold === 0) {
+                 setTimeout(() => { riseUnmovableBlocks(); }, 300);
+            }
         }
+        
+        async function riseUnmovableBlocks() {
+            isProcessing = true;
+            for (let c = 0; c < COLS; c++) board[0][c]?.element.remove();
+            
+            for (let r = 1; r < ROWS; r++) {
+                for(let c = 0; c < COLS; c++){
+                    const tile = board[r][c];
+                    board[r-1][c] = tile;
+                    if (tile) positionTile(tile, r - 1, c);
+                }
+            }
+            
+            for (let c = 0; c < COLS; c++) createTile(ROWS - 1, c, 'unmovable');
+            
+            movesCount = 0; 
+            updateMovesDisplay(); 
+            await new Promise(r => setTimeout(r, 300));
+            isProcessing = false;
+            checkGameStatus(); 
+        }
+
+        // 23. ДОБАВЛЕНА ПРОВЕРКА НА ОТСУТСТВИЕ ХОДОВ
+        function checkGameStatus() {
+            if (isProcessing || isPaused) return;
+
+            // 1. Проверка на Game Over (блоки достигли верха)
+            for (let c = 0; c < COLS; c++) {
+                if (board[0][c]?.type === 'unmovable') {
+                    gameOver(); 
+                    return; 
+                }
+            }
+            
+            // 2. Проверка на отсутствие ходов
+            if (!checkForPossibleMoves()) {
+                gameOver(); // TODO: Может, лучше перемешать поле?
+                return;
+            }
+        }
+        
+        // 24. НОВАЯ ФУНКЦИЯ ПРОВЕРКИ ХОДОВ
+        function checkForPossibleMoves() {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const tile = board[r][c];
+                    if (!tile) continue;
+                    
+                    // Если это бонус, ход всегда есть (тап или свайп)
+                    if (tile.bonus) return true;
+
+                    // Проверка свайпа вправо
+                    if (c < COLS - 1 && canCreateMatchBySwapping(r, c, r, c + 1)) return true;
+                    // Проверка свайпа вниз
+                    if (r < ROWS - 1 && canCreateMatchBySwapping(r, c, r + 1, c)) return true;
+                }
+            }
+            return false; // Нет ходов
+        }
+        
+        function canCreateMatchBySwapping(r1, c1, r2, c2) {
+            const tile1 = board[r1][c1], tile2 = board[r2][c2];
+            if (!tile1 || !tile2 || tile1.type === 'unmovable' || tile2.type === 'unmovable') return false;
+            
+            // Если один из них бонус, свайп всегда возможен
+            if (tile1.bonus || tile2.bonus) return true;
+            if(!tile1.color || !tile2.color) return false;
+            
+            let hasMatch = false;
+            // Симулируем смену
+            const tempColor1 = tile1.color, tempColor2 = tile2.color;
+            tile1.color = tempColor2; tile2.color = tempColor1;
+
+            // Проверяем матчи вокруг *обоих* поменянных тайлов
+            const checkTile = (r, c) => {
+                const color = board[r][c]?.color;
+                if (!color) return false;
+                const hMatch = getLine(r, c, 0, 1).concat(getLine(r, c, 0, -1).slice(1));
+                const vMatch = getLine(r, c, 1, 0).concat(getLine(r, c, -1, 0).slice(1));
+                return hMatch.length >= 3 || vMatch.length >= 3;
+            };
+
+            if (checkTile(r1, c1) || checkTile(r2, c2)) {
+                hasMatch = true;
+            }
+
+            // Возвращаем цвета обратно
+            tile1.color = tempColor1; tile2.color = tempColor2;
+            return hasMatch;
+        }
+
+        
+        function gameOver() {
+            playSound('lose'); // Звук проигрыша
+            isPaused = true;
+            document.getElementById('final-score-value').textContent = score;
+            document.getElementById('final-moves-value').textContent = totalMoves;
+            saveStats();
+            openModal(document.getElementById('game-over-modal'));
+        }
+        function saveStats() {
+            stats.push({ mode: gameMode, score, moves: totalMoves });
+            stats.sort((a, b) => b.score - a.score).splice(10); 
+            localStorage.setItem('gemfall_stats', JSON.stringify(stats));
+        }
+
+        // --- UI Control ---
+        function openModal(modal) { modal.classList.add('active'); }
+        function closeModal(modal) { modal.classList.remove('active'); }
+        
+        document.getElementById('classic-mode-btn').addEventListener('click', () => startGame('classic'));
+        document.getElementById('hard-mode-btn').addEventListener('click', () => startGame('hard'));
+        document.getElementById('pause-btn').addEventListener('click', () => { if(!isPaused) { openModal(document.getElementById('pause-modal')); isPaused = true; } });
+        document.getElementById('resume-btn').addEventListener('click', () => { closeModal(document.getElementById('pause-modal')); isPaused = false; });
+        document.getElementById('restart-game-btn').addEventListener('click', () => { closeModal(document.getElementById('pause-modal')); startGame(gameMode); });
+        document.getElementById('main-menu-btn-pause').addEventListener('click', () => { modals.forEach(closeModal); showMainMenu(); });
+        document.getElementById('restart-game-over-btn').addEventListener('click', () => { closeModal(document.getElementById('game-over-modal')); startGame(gameMode); });
+        document.getElementById('main-menu-btn-over').addEventListener('click', () => { modals.forEach(closeModal); showMainMenu(); });
+        document.getElementById('settings-btn').addEventListener('click', () => openModal(document.getElementById('settings-modal')));
+        document.getElementById('close-settings-btn').addEventListener('click', () => closeModal(document.getElementById('settings-modal')));
+        document.getElementById('rules-btn').addEventListener('click', () => openModal(document.getElementById('rules-modal')));
+        document.getElementById('close-rules-btn').addEventListener('click', () => closeModal(document.getElementById('rules-modal')));
+        document.getElementById('stats-btn').addEventListener('click', () => { updateStatsTable(); openModal(document.getElementById('stats-modal')); });
+        document.getElementById('close-stats-btn').addEventListener('click', () => closeModal(document.getElementById('stats-modal')));
+
+        function showMainMenu() { gameScreen.classList.add('hidden'); mainMenuScreen.classList.remove('hidden'); }
+        
+        function updateStatsTable() {
+            const tableBody = document.querySelector('#stats-table tbody');
+            
+            const bestClassic = stats.filter(s => s.mode === 'classic').reduce((max, s) => s.score > max ? s.score : max, 0);
+            const bestHard = stats.filter(s => s.mode === 'hard').reduce((max, s) => s.score > max ? s.score : max, 0);
+
+            const movesClassic = stats.find(s => s.mode === 'classic' && s.score === bestClassic)?.moves || 0;
+            const movesHard = stats.find(s => s.mode === 'hard' && s.score === bestHard)?.moves || 0;
+
+            tableBody.innerHTML = `
+                <tr>
+                    <td>Классика</td>
+                    <td>${bestClassic > 0 ? bestClassic : '---'}</td>
+                    <td>${movesClassic > 0 ? movesClassic : '---'}</td>
+                </tr>
+                <tr>
+                    <td>Хард</td>
+                    <td>${bestHard > 0 ? bestHard : '---'}</td>
+                    <td>${movesHard > 0 ? movesHard : '---'}</td>
+                </tr>
+            `;
+        }
+        
+        document.querySelector('.theme-selection').addEventListener('click', (e) => {
+            const newTheme = e.target.dataset.theme;
+            if (!newTheme) return;
+            document.body.className = newTheme;
+            localStorage.setItem('gemfall_theme', newTheme);
+            document.querySelectorAll('.theme-selection button').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+        });
+
+        (function loadTheme() {
+            const savedTheme = localStorage.getItem('gemfall_theme') || 'theme-space';
+            document.body.className = savedTheme;
+            const btn = document.querySelector(`.theme-selection button[data-theme="${savedTheme}"]`);
+            if(btn) btn.classList.add('active');
+        })();
+    });
     </script>
 </body>
 </html>
-
 
