@@ -53,7 +53,6 @@
         
         /* --- End of Themes --- */
 
-        /* 1. PRELOADER */
         #preloader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: var(--bg-main);
@@ -76,7 +75,6 @@
             margin-top: 1rem; font-size: 1rem; font-weight: 700;
             color: var(--text-secondary);
         }
-        /* --- END PRELOADER --- */
 
         body {
             font-family: var(--font-main); background-color: var(--bg-main); color: var(--text-secondary);
@@ -84,7 +82,6 @@
         }
 
         .main-container {
-            /* 2. HIDE MAIN CONTAINER UNTIL PRELOADER IS DONE */
             display: none; 
             justify-content: center; align-items: center;
             height: 100%; width: 100%; overflow: hidden;
@@ -140,25 +137,30 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); text-transform: uppercase;
         }
         
-        /* 3. RE-STYLED MENU BUTTONS */
+        /* 1. ИЗМЕНЕН ДИЗАЙН КНОПОК МЕНЮ */
         .btn-menu {
-            background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(0,0,0,0.2));
-            border: 2px solid var(--text-primary);
-            box-shadow: 0 4px 0 0 var(--text-primary), 0 0 10px rgba(0,0,0,0.3);
-            border-radius: 2rem; /* More rounded */
-            font-family: var(--font-title); /* Use title font */
-            font-size: 1.75rem;
-            text-transform: capitalize; /* No uppercase */
-            padding: 0.75rem 2rem;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid var(--border-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border-radius: 0.5rem; /* Более "рунический" вид */
+            font-family: var(--font-main); /* Обычный шрифт, но жирный */
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-transform: uppercase; /* Обратно на uppercase */
+            padding: 1rem 2rem;
             color: var(--text-secondary);
         }
         .btn-menu:hover {
-            background-color: var(--text-primary); color: var(--bg-secondary);
-            transform: translateY(-3px); box-shadow: 0 8px 0 0 var(--text-primary);
+            background-color: var(--border-color); 
+            color: var(--bg-secondary);
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         .btn-menu:active, .btn-menu.manual-active {
-            transform: translateY(2px); box-shadow: 0 2px 0 0 var(--text-primary);
+            transform: translateY(1px); 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
+        /* --- КОНЕЦ ДИЗАЙНА КНОПОК --- */
         
         .icon-btn {
             background: rgba(0,0,0,0.2);
@@ -192,7 +194,7 @@
              justify-content: flex-start; 
         }
 
-        /* 4. RE-STYLED GAME HEADER */
+        /* 2. ИЗМЕНЕН ДИЗАЙН ШАПКИ */
         .game-header {
             width: 100%;
             display: flex;
@@ -200,42 +202,48 @@
             align-items: center;
             margin-bottom: 0.5rem;
             padding: 0.25rem;
-            background: rgba(0,0,0,0.2); /* Semi-transparent */
-            border-radius: 1rem;
-            border: 2px solid var(--accent-color);
+            background: rgba(0,0,0,0.4); /* Темнее */
+            border-radius: 1.5rem; /* Более круглый */
+            border: 1px solid var(--accent-color);
             flex-shrink: 0;
             gap: 0.5rem;
+            flex-wrap: wrap; /* Разрешаем перенос */
         }
         .header-item {
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: var(--bg-main);
-            padding: 0.5rem 1rem;
-            border-radius: 0.75rem;
-            flex-grow: 1; /* All items grow equally */
+            background-color: var(--bg-secondary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            flex-grow: 1;
         }
         .header-item.score-container {
-            flex-grow: 2; /* Score takes more space */
+            flex-grow: 2; 
             color: var(--text-primary);
             font-weight: 700;
         }
-        .header-item svg { width: 24px; height: 24px; fill: var(--text-primary); margin-right: 0.5rem; }
-        .header-item span { font-size: 1.1rem; font-weight: 600; }
+        .header-item svg { width: 20px; height: 20px; fill: var(--text-primary); margin-right: 0.5rem; }
+        .header-item span { font-size: 1rem; font-weight: 600; }
         
         .pause-btn-container {
             padding: 0;
-            flex-grow: 0; /* Don't grow */
-            width: 50px;
+            flex-grow: 0; 
+            width: 44px; /* Уменьшен */
+            height: 44px;
         }
         .pause-btn-container .icon-btn {
-            width: 50px; height: 50px;
-            background: var(--bg-main);
+            width: 44px; height: 44px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+        }
+        .pause-btn-container .icon-btn svg {
+            width: 20px; height: 20px;
         }
 
         #rise-progress-bar-container {
-            /* Now part of the flex layout */
-            order: 3; /* Comes last */
+            order: 3; 
             width: 100%;
             height: 8px;
             background-color: var(--progress-bar-bg);
@@ -244,14 +252,14 @@
             margin-top: 0.25rem;
         }
         #rise-progress-bar { width: 100%; height: 100%; background-color: var(--progress-bar-fill); transition: width 0.3s ease-in-out; }
-        /* --- END HEADER RE-STYLE --- */
+        /* --- КОНЕЦ ДИЗАЙНА ШАПКИ --- */
 
         #game-board {
             position: relative;
             aspect-ratio: 7 / 10; 
             width: 100%;
             overflow: hidden;
-            background-color: rgba(0,0,0,0.2); /* Darker transparent */
+            background-color: rgba(0,0,0,0.2); 
             border-radius: 1rem;
             box-sizing: border-box;
             margin-left: auto; 
@@ -263,7 +271,7 @@
 
         .tile {
             aspect-ratio: 1 / 1; position: absolute;
-            /* 5. FIXED TILE FALLING ANIMATION (no bounce) */
+            /* 3. ИСПРАВЛЕНА АНИМАЦИЯ ПАДЕНИЯ (убран bounce) */
             transition: top 0.3s ease-out, left 0.3s ease-out;
             will-change: top, left, transform;
             display: flex;
@@ -391,7 +399,6 @@
     </style>
 </head>
 <body class="theme-space">
-    <!-- 6. PRELOADER HTML -->
     <div id="preloader">
         <h1 class="game-title" style="font-size: 3rem; margin-bottom: 1rem;">Тайна рун</h1>
         <div id="loading-bar-container">
@@ -428,15 +435,14 @@
         </div>
         
         <div id="game-screen" class="game-screen hidden">
-            <!-- 7. RE-STYLED HEADER -->
-            <div class="game-header" style="flex-wrap: wrap;"> <!-- Allow wrap on small screens -->
+            <div class="game-header" style="flex-wrap: wrap;"> 
                 <div class="header-item score-container">
                     <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
                     <span id="score">0</span>
                 </div>
                 <div class="pause-btn-container">
                      <button id="pause-btn" class="icon-btn">
-                        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px;"><path class="primary-path" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+                        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path class="primary-path" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
                      </button>
                 </div>
                 <div class="header-item moves-container">
@@ -444,7 +450,6 @@
                 </div>
                 <div id="rise-progress-bar-container"><div id="rise-progress-bar"></div></div>
             </div>
-            <!-- END HEADER -->
             
             <div id="game-board"></div>
         </div>
@@ -509,7 +514,6 @@
     <div id="vk_ads_banner"></div>
 
     <script>
-    // 8. ASSET PRELOADER LIST
     const ASSET_LIST = [
         'music.mp3',
         'bg-space.png', 'bg-forest.png', 'bg-ocean.png', 'bg-retro.png',
@@ -526,7 +530,6 @@
     let interstitialReady = false; 
     let bannerReady = false; 
     
-    // Глобальные переменные для настроек
     let isMuted = true;
     let isMusicMuted = true;
     let currentTheme = 'theme-space';
@@ -554,7 +557,7 @@
                     console.log("Interstitial Ad is Ready");
                     interstitialReady = true;
                 }
-                if (e.detail.type === 'VKWebAppBannerAdUpdated') {
+                if (e.detail.type === 'VKWebAppBannerAdUpdated' || e.detail.type === 'VKWebAppBannerAdReceived') {
                     bannerReady = true;
                 }
             });
@@ -582,11 +585,10 @@
     }
 
     function showInterstitialAd(callback) {
-        // 9. FIXED INTERSTITIAL FALLBACK
         if (!interstitialReady) {
             console.log("Ad not ready, skipping.");
             if(callback) callback();
-            vkBridge.send('VKWebAppPrepareInterstitial'); // Try again
+            vkBridge.send('VKWebAppPrepareInterstitial'); 
             return;
         }
 
@@ -614,7 +616,7 @@
             isMusicMuted: isMusicMuted,
             currentTheme: currentTheme
         };
-        const storageKey = `runes_data_v2_${vkUserId}`; // v2
+        const storageKey = `runes_data_v2_${vkUserId}`;
         try {
             await vkBridge.send('VKWebAppStorageSet', { key: storageKey, value: JSON.stringify(dataToSave) });
         } catch (error) {
@@ -636,27 +638,29 @@
             if (localData) loadedData = JSON.parse(localData);
         }
 
-        // 10. FIXED DEFAULTS FOR SOUND/MUSIC
+        // 4. ИСПРАВЛЕНЫ ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ ДЛЯ ЗВУКА
         if (loadedData) {
             stats = loadedData.stats || { classic: { score: 0, moves: 0 }, hard: { score: 0, moves: 0 } };
-            isMuted = loadedData.isMuted === false ? false : true; // Default to TRUE if undefined
-            isMusicMuted = loadedData.isMusicMuted === false ? false : true; // Default to TRUE if undefined
+            isMuted = loadedData.isMuted === undefined ? false : loadedData.isMuted; // Default to UNMUTED
+            isMusicMuted = loadedData.isMusicMuted === undefined ? false : loadedData.isMusicMuted; // Default to UNMUTED
             currentTheme = loadedData.currentTheme || 'theme-space';
         } else {
             stats = { classic: { score: 0, moves: 0 }, hard: { score: 0, moves: 0 } };
-            isMuted = false; // Default OFF for new user
-            isMusicMuted = false; // Default OFF for new user
+            isMuted = false; 
+            isMusicMuted = false; 
             currentTheme = 'theme-space';
         }
 
-        // Apply settings
         updateMuteButton();
         updateMusicMuteButton();
-        updateTheme(currentTheme, true); // true = don't save
+        updateTheme(currentTheme, true); 
         updateStatsTable(); 
         
+        // 5. ЗАПУСК АУДИОКОНТЕКСТА И МУЗЫКИ (если надо)
+        // initAudio() теперь вызывается по первому клику,
+        // но мы заранее выставляем флаги, чтобы он знал, что делать
         if (!isMusicMuted) {
-            playMusic();
+            playMusic(); // Попытается сыграть, как только audioReady станет true
         }
     }
 
@@ -679,14 +683,13 @@
             synths.rocket.volume.value = -15;
             synths.combo.volume.value = -8;
 
-            // 11. LOAD MUSIC PLAYER (no autostart)
             musicPlayer = new Tone.Player({
                 url: "music.mp3",
                 loop: true,
                 volume: -12
             }).toDestination();
             
-            await Tone.loaded(); // Wait for player to be loaded
+            await Tone.loaded(); 
             
             audioReady = true;
             console.log("Audio ready.");
@@ -698,8 +701,8 @@
         }
     }
     
-    // 12. TIE AUDIO INIT TO PRELOADER
-    // document.body.addEventListener('pointerdown', initAudio, { once: true }); // Removed
+    // 6. ИНИЦИАЛИЗАЦИЯ АУДИО ПО ПЕРВОМУ КЛИКУ
+    document.body.addEventListener('pointerdown', initAudio, { once: true });
 
     function playSound(sound, time = Tone.now()) {
         if (!audioReady || isMuted || !synths[sound]) return; 
@@ -718,7 +721,12 @@
     }
 
     function playMusic() {
-        if (!audioReady || isMusicMuted || !musicPlayer) return;
+        if (isMusicMuted) return;
+        if (!audioReady || !musicPlayer) {
+             // Если аудио еще не готово, просто взводим флаг
+             // initAudio() сам вызовет playMusic()
+            return; 
+        }
         if (musicPlayer.state !== 'started') {
             musicPlayer.start().catch(e => console.error("Music start error", e));
         }
@@ -750,26 +758,24 @@
             loadingStatus.textContent = `Загружено ${assetsLoaded} из ${totalAssets}`;
             
             if (assetsLoaded === totalAssets) {
-                setTimeout(showMainMenu, 300); // Small delay
+                setTimeout(showMainMenu, 300); 
             }
         };
 
         ASSET_LIST.forEach(assetName => {
+            // 7. УПРОЩЕНА ЗАГРУЗКА АУДИО (initAudio() вызывается отдельно)
             if (assetName.endsWith('.mp3')) {
-                // Use Tone.Player for music
-                if (assetName === 'music.mp3') {
-                     initAudio().then(() => assetLoaded(assetName));
-                } else {
-                    // Handle other sounds if needed
-                    assetLoaded(assetName);
-                }
+                const audio = new Audio();
+                audio.addEventListener('canplaythrough', () => assetLoaded(assetName), { once: true });
+                audio.addEventListener('error', () => { console.error(`Failed to load: ${assetName}`); assetLoaded(assetName); }, { once: true });
+                audio.src = assetName;
             } else if (assetName.endsWith('.png')) {
                 const img = new Image();
                 img.onload = () => assetLoaded(assetName);
                 img.onerror = () => { console.error(`Failed to load: ${assetName}`); assetLoaded(assetName); };
                 img.src = assetName;
             } else {
-                assetLoaded(assetName); // Assume other types load instantly
+                assetLoaded(assetName); 
             }
         });
     }
@@ -780,18 +786,19 @@
         preloader.style.opacity = '0';
         setTimeout(() => {
             preloader.style.display = 'none';
-            mainContainer.style.display = 'flex'; // Show game
-            initGameLogic(); // Start all game logic
+            mainContainer.style.display = 'flex'; 
+            initGameLogic(); 
         }, 500);
     }
     
-    // 13. START PRELOADER ON DOMCONTENTLOADED
     document.addEventListener('DOMContentLoaded', () => {
-        preloadAssets();
+        // ЗАПУСК VK И PRELOADER (VK запускается *до* прелоадера)
+        initVK().then(() => {
+            preloadAssets();
+        });
     });
 
 
-    // 14. ALL GAME LOGIC MOVED INSIDE initGameLogic()
     function initGameLogic() {
         // --- DOM Elements ---
         const mainMenuScreen = document.getElementById('main-menu-screen');
@@ -832,7 +839,6 @@
             
             showBannerAd();
             
-            // 15. DELAY INITBOARD TO ALLOW RESIZE
             requestAnimationFrame(() => {
                 initBoard();
             });
@@ -842,7 +848,7 @@
             boardElement.innerHTML = '';
             board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
             
-            resizeBoard(); // Call resize first
+            resizeBoard(); 
 
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
@@ -872,23 +878,18 @@
             const boardContainerHeight = boardElement.clientHeight;
             if (boardContainerHeight === 0) return;
 
-            // Calculate tile size based on width
             let sizeFromWidth = (boardContainerWidth - (COLS + 1) * GAP) / COLS;
             let boardHeight = (sizeFromWidth + GAP) * ROWS + GAP;
 
-            // Calculate tile size based on height
             let sizeFromHeight = (boardContainerHeight - (ROWS + 1) * GAP) / ROWS;
             let boardWidth = (sizeFromHeight + GAP) * COLS + GAP;
 
-            // Use the smaller of the two dimensions to fit the board
             if (boardHeight > boardContainerHeight) {
-                // Limited by height
                 TILE_SIZE = sizeFromHeight;
                 boardElement.style.width = `${boardWidth}px`;
                 boardElement.style.height = `${boardContainerHeight}px`;
                 boardElement.style.margin = '0 auto'; 
             } else {
-                // Limited by width
                 TILE_SIZE = sizeFromWidth;
                 boardElement.style.width = '100%';
                 boardElement.style.height = `${boardHeight}px`;
@@ -947,23 +948,21 @@
             const targetTop = GAP + r * (TILE_SIZE + GAP);
             const targetLeft = GAP + c * (TILE_SIZE + GAP);
 
+            // 8. ИСПРАВЛЕНА АНИМАЦИЯ ПАДЕНИЯ (убран bounce)
             if (isInitial) {
-                 // 16. FIXED TILE FALLING ANIMATION (from "Таил поп")
-                 const delay = (c * 0.02 + r * 0.05); // Stagger fall
-                 tileData.element.style.transition = 'top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.3s ease-out';
+                 const delay = (c * 0.02 + r * 0.05); 
+                 tileData.element.style.transition = 'top 0.5s ease-out, left 0.3s ease-out';
                  tileData.element.style.transitionDelay = `${delay}s`;
                  tileData.element.style.top = `${targetTop - boardElement.clientHeight}px`;
                  tileData.element.style.left = `${targetLeft}px`;
                  requestAnimationFrame(() => {
                      tileData.element.style.top = `${targetTop}px`;
                  });
-                 // Remove delay after animation
                  setTimeout(() => {
                      tileData.element.style.transition = 'top 0.3s ease-out, left 0.3s ease-out';
                      tileData.element.style.transitionDelay = '0s';
                  }, delay * 1000 + 500);
             } else {
-                 // Standard smooth movement
                  tileData.element.style.transition = 'top 0.3s ease-out, left 0.3s ease-out';
                  tileData.element.style.transitionDelay = '0s';
                  tileData.element.style.left = `${targetLeft}px`;
@@ -1224,7 +1223,7 @@
                 
                 playSound('match');
                 
-                // 17. FIXED BONUS CREATION LOGIC
+                // 9. ИСПРАВЛЕНА ЛОГИКА СОЗДАНИЯ БОНУСОВ
                 const tilesToDestroy = new Set(matches);
                 let bonusToCreate = null;
                 let bestBonus = null;
@@ -1248,22 +1247,24 @@
                     
                     if (!bestBonus && bonusInfo.length > 0) {
                         bestBonus = bonusInfo.sort((a, b) => (b.type === 'rocket' ? 1 : 0) - (a.type === 'rocket' ? 1 : 0))[0];
+                        // Найти плитку из этого бонуса, которая все еще в "matches"
                         creationTile = [...bestBonus.tiles].find(t => matches.has(t));
                     }
 
                     if (bestBonus && creationTile) {
                         bonusToCreate = { r: creationTile.r, c: creationTile.c, type: bestBonus.type };
-                        // Удаляем *все* тайлы, образующие бонус, из набора на уничтожение
-                        bestBonus.tiles.forEach(t => tilesToDestroy.delete(t));
+                        // Убеждаемся, что *все* плитки, образующие бонус, будут уничтожены...
+                        bestBonus.tiles.forEach(t => tilesToDestroy.add(t));
+                        // ...кроме той, что *станет* бонусом
+                        tilesToDestroy.delete(creationTile);
                     }
                 }
                 
                 firstLoop = false; 
                 
-                const unmovableToDestroy = findAdjacentUnmovables(matches); // Check against original matches
+                const unmovableToDestroy = findAdjacentUnmovables(matches); 
                 unmovableToDestroy.forEach(t => tilesToDestroy.add(t));
                 
-                // Собираем цепные реакции от бонусов, которые *уже были на поле* и попали в `matches`
                 await collectTilesFromBonuses(matches, tilesToDestroy); 
                 
                 score += tilesToDestroy.size * 10;
@@ -1272,16 +1273,18 @@
                 await animateMatches(tilesToDestroy);
                 
                 if (bonusToCreate) {
-                    // Создаем новый бонус на месте creationTile
                     const tile = board[bonusToCreate.r]?.[bonusToCreate.c]; 
-                    if (tile) { 
-                       // Уничтожаем старый тайл (он не был в tilesToDestroy)
-                       await animateMatches(new Set([tile]));
+                    if (tile) { // Он должен был выжить
+                       const tileInner = tile.element.querySelector('.tile-inner');
+                       tileInner.className = 'tile-inner'; // Сброс (gem-red и т.д.)
                        
-                       // Создаем новый бонус
-                       const newTile = createTile(bonusToCreate.r, bonusToCreate.c, 'gem', null, bonusToCreate.type);
-                       newTile.element.querySelector('.tile-inner').classList.add('bonus-create');
-                       setTimeout(() => newTile.element.querySelector('.tile-inner').classList.remove('bonus-create'), 400);
+                       tile.bonus = bonusToCreate.type;
+                       tile.color = null; 
+                       
+                       tileInner.classList.add(bonusToCreate.type);
+                       tileInner.classList.add('bonus-create');
+                       
+                       setTimeout(() => tileInner.classList.remove('bonus-create'), 400);
                     }
                 }
                 
@@ -1401,10 +1404,9 @@
             }, 400));
         }
 
-        // 18. FIXED dropAndRefill (from "Таил поп")
+        // 10. ИСПРАВЛЕНА АНИМАЦИЯ ПАДЕНИЯ
         async function dropAndRefill() {
             let maxDelay = 0;
-            // 1. Падение существующих
             for (let c = 0; c < COLS; c++) { 
                 let emptyRow = -1; 
                 for (let r = ROWS - 1; r >= 0; r--) { 
@@ -1418,19 +1420,16 @@
                     } 
                 } 
             }
-            await new Promise(r => setTimeout(r, 300)); // Ждем завершения падения
+            await new Promise(r => setTimeout(r, 300)); 
             
-            // 2. Создание новых
             const newTiles = [];
             for (let c = 0; c < COLS; c++) {
                 let fillCount = 0;
                 for (let r = ROWS - 1; r >= 0; r--) {
                     if (board[r][c] === null) {
                         const newTile = createTile(r, c, 'gem', getRandomColor());
-                        // Позиционируем *над* экраном
                         newTile.element.style.top = `${GAP + (r - ROWS) * (TILE_SIZE + GAP)}px`;
-                        // Плавная задержка
-                        const delay = (c * 0.02 + fillCount * 0.08);
+                        const delay = (c * 0.02 + fillCount * 0.08); // Используем fillCount
                         newTile.element.style.transitionDelay = `${delay}s`;
                         maxDelay = Math.max(maxDelay, delay);
                         newTiles.push(newTile);
@@ -1439,16 +1438,17 @@
                 }
             }
             
-            // 3. Запускаем анимацию падения
             requestAnimationFrame(() => { 
-                newTiles.forEach(tile => positionTile(tile, tile.r, tile.c, true)); // true = isInitial (для "Таил поп" падения)
+                newTiles.forEach(tile => {
+                    // Используем isInitial = true для правильной анимации падения
+                    positionTile(tile, tile.r, tile.c, true); 
+                }); 
             });
             
-            // 4. Ждем завершения самой долгой анимации
             await new Promise(r => setTimeout(r, maxDelay * 1000 + 500)); 
-            // 5. Сбрасываем задержки
             newTiles.forEach(tile => {
                 if (tile.element) {
+                    // Сбрасываем transition
                     tile.element.style.transition = 'top 0.3s ease-out, left 0.3s ease-out';
                     tile.element.style.transitionDelay = '0s';
                 }
@@ -1457,7 +1457,7 @@
 
         // --- Utility Functions ---
         function getRandomColor() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
-        function updateScore(newScore) { score = newScore; scoreElement.textContent = score; }
+        function updateScore(newScore) { score = newScore; scoreElement.textContent = newScore; }
         function updateMovesDisplay() {
             const riseThreshold = gameMode === 'classic' ? 5 : 2;
             const progress = (movesCount % riseThreshold) / riseThreshold * 100;
@@ -1465,11 +1465,11 @@
             movesCountElement.textContent = totalMoves;
             
             if (totalMoves > 0 && movesCount > 0 && movesCount % riseThreshold === 0) {
-                 // 19. FIXED ROW RISE BUG
-                 setTimeout(() => { riseUnmovableBlocks(); }, 500); // Даем больше времени
+                 setTimeout(() => { riseUnmovableBlocks(); }, 500); 
             }
         }
         
+        // 11. ИСПРАВЛЕНА ЛОГИКА ПОДНЯТИЯ РЯДА
         async function riseUnmovableBlocks() {
             isProcessing = true;
             
@@ -1479,30 +1479,42 @@
                 board[0][c] = null;
             }
             
-            // 2. Сдвигаем все ряды вверх
+            // 2. Сдвигаем все ряды вверх (в данных)
             for (let r = 1; r < ROWS; r++) {
                 for(let c = 0; c < COLS; c++){
                     const tile = board[r][c];
                     board[r-1][c] = tile;
                     if (tile) {
-                        positionTile(tile, r - 1, c); // Плитка плавно едет вверх
+                        tile.r = r - 1; // Обновляем r в объекте
                     }
                 }
             }
-            
-            // 3. Создаем новый нижний ряд
+            board[ROWS - 1] = Array(COLS).fill(null); // Очищаем последнюю строку в данных
+
+            // 3. Анимируем сдвиг *всех* существующих плиток
+            for (let r = 0; r < ROWS - 1; r++) {
+                 for(let c = 0; c < COLS; c++){
+                     const tile = board[r][c];
+                     if(tile) {
+                         positionTile(tile, tile.r, tile.c); // Анимация на новую позицию
+                     }
+                 }
+            }
+            await new Promise(r => setTimeout(r, 300)); // Ждем анимацию сдвига
+
+            // 4. Создаем новый нижний ряд
             for (let c = 0; c < COLS; c++) {
                 const newTile = createTile(ROWS - 1, c, 'unmovable');
-                // 20. АНИМАЦИЯ ПОДЪЕМА НИЖНЕГО РЯДА
-                newTile.element.style.top = `${GAP + ROWS * (TILE_SIZE + GAP)}px`; // Позиция под полем
+                // Анимация появления снизу
+                newTile.element.style.top = `${GAP + ROWS * (TILE_SIZE + GAP)}px`; 
                 requestAnimationFrame(() => {
-                    positionTile(newTile, ROWS - 1, c); // Едет на место
+                    positionTile(newTile, ROWS - 1, c); 
                 });
             }
             
             movesCount = 0; 
             updateMovesDisplay(); 
-            await new Promise(r => setTimeout(r, 300));
+            await new Promise(r => setTimeout(r, 300)); // Ждем анимацию появления
             isProcessing = false;
             checkGameStatus(); 
         }
@@ -1567,7 +1579,7 @@
             playSound('lose'); 
             isPaused = true;
             
-            saveStats(); // Сохраняем статистику
+            saveStats(); 
             
             showInterstitialAd(() => {
                 isPaused = true; 
@@ -1622,8 +1634,9 @@
         }
         function toggleMute() {
             isMuted = !muteToggle.checked;
-            playSound('tap');
             saveGameData();
+            // 12. ВОСПРОИЗВОДИМ ЗВУК *ПОСЛЕ* СОХРАНЕНИЯ
+            if(!isMuted) playSound('tap');
         }
         muteToggle.addEventListener('change', toggleMute);
         
@@ -1665,7 +1678,8 @@
             currentTheme = newTheme;
             
             document.querySelectorAll('.theme-selection button').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.theme === newTheme);
+                // 13. ИСПРАВЛЕНА ЛОГИКА СРАВНЕНИЯ (theme-space === theme-space)
+                btn.classList.toggle('active', btn.dataset.theme === newTheme.replace('theme-', ''));
             });
             if(!skipSave) saveGameData(); 
         }
@@ -1673,12 +1687,11 @@
         document.querySelector('.theme-selection').addEventListener('click', (e) => {
             const newTheme = e.target.dataset.theme;
             if (!newTheme) return;
-            // 21. FIXED THEME SWITCH BUG
-            updateTheme(newTheme);
+            // 14. ИСПРАВЛЕНА ПЕРЕДАЧА ИМЕНИ ТЕМЫ
+            updateTheme(`theme-${newTheme}`);
         });
 
-        // 22. START VK INIT
-        initVK();
+        // 15. ЗАПУСК VK ПРОИСХОДИТ В DOMCONTENTLOADED
     }
     </script>
 </body>
