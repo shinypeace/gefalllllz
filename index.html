@@ -85,7 +85,6 @@
             display: none; 
             justify-content: center; align-items: center;
             height: 100%; width: 100%; overflow: hidden;
-            background-image: url('bg-space.png');
             background-size: cover;
             background-position: center;
             transition: background-image 0.3s ease;
@@ -514,8 +513,8 @@
     <div id="vk_ads_banner"></div>
 
     <script>
+    // 4. ИСПРАВЛЕН ASSET_LIST (УБРАНА МУЗЫКА)
     const ASSET_LIST = [
-        'music.mp3',
         'bg-space.png', 'bg-forest.png', 'bg-ocean.png', 'bg-retro.png',
         'gem-red.png', 'gem-blue.png', 'gem-green.png', 'gem-yellow.png', 'gem-purple.png', 'gem-orange.png',
         'bonus-bomb.png', 'bonus-rocket.png', 'block-stone.png'
@@ -530,10 +529,11 @@
     let interstitialReady = false; 
     let bannerReady = false; 
     
-    let isMuted = true;
-    let isMusicMuted = true;
+    // 5. ИСПРАВЛЕНЫ ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ
+    let isMuted = false;
+    let isMusicMuted = false;
     let currentTheme = 'theme-space';
-    let stats = {};
+    let stats = { classic: { score: 0, moves: 0 }, hard: { score: 0, moves: 0 } };
 
     // --- VK Init ---
     async function initVK() {
@@ -638,13 +638,13 @@
             if (localData) loadedData = JSON.parse(localData);
         }
 
-        // 4. ИСПРАВЛЕНЫ ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ ДЛЯ ЗВУКА
         if (loadedData) {
             stats = loadedData.stats || { classic: { score: 0, moves: 0 }, hard: { score: 0, moves: 0 } };
-            isMuted = loadedData.isMuted === undefined ? false : loadedData.isMuted; // Default to UNMUTED
-            isMusicMuted = loadedData.isMusicMuted === undefined ? false : loadedData.isMusicMuted; // Default to UNMUTED
+            isMuted = loadedData.isMuted === undefined ? false : loadedData.isMuted; 
+            isMusicMuted = loadedData.isMusicMuted === undefined ? false : loadedData.isMusicMuted; 
             currentTheme = loadedData.currentTheme || 'theme-space';
         } else {
+            // Defaults for new user
             stats = { classic: { score: 0, moves: 0 }, hard: { score: 0, moves: 0 } };
             isMuted = false; 
             isMusicMuted = false; 
@@ -656,11 +656,8 @@
         updateTheme(currentTheme, true); 
         updateStatsTable(); 
         
-        // 5. ЗАПУСК АУДИОКОНТЕКСТА И МУЗЫКИ (если надо)
-        // initAudio() теперь вызывается по первому клику,
-        // но мы заранее выставляем флаги, чтобы он знал, что делать
         if (!isMusicMuted) {
-            playMusic(); // Попытается сыграть, как только audioReady станет true
+            playMusic();
         }
     }
 
@@ -701,7 +698,6 @@
         }
     }
     
-    // 6. ИНИЦИАЛИЗАЦИЯ АУДИО ПО ПЕРВОМУ КЛИКУ
     document.body.addEventListener('pointerdown', initAudio, { once: true });
 
     function playSound(sound, time = Tone.now()) {
@@ -723,8 +719,6 @@
     function playMusic() {
         if (isMusicMuted) return;
         if (!audioReady || !musicPlayer) {
-             // Если аудио еще не готово, просто взводим флаг
-             // initAudio() сам вызовет playMusic()
             return; 
         }
         if (musicPlayer.state !== 'started') {
@@ -763,18 +757,15 @@
         };
 
         ASSET_LIST.forEach(assetName => {
-            // 7. УПРОЩЕНА ЗАГРУЗКА АУДИО (initAudio() вызывается отдельно)
-            if (assetName.endsWith('.mp3')) {
-                const audio = new Audio();
-                audio.addEventListener('canplaythrough', () => assetLoaded(assetName), { once: true });
-                audio.addEventListener('error', () => { console.error(`Failed to load: ${assetName}`); assetLoaded(assetName); }, { once: true });
-                audio.src = assetName;
-            } else if (assetName.endsWith('.png')) {
+            // 6. УБРАНА ЗАГРУЗКА .mp3 ИЗ ПРЕЛОАДЕРА
+            if (assetName.endsWith('.png')) {
                 const img = new Image();
                 img.onload = () => assetLoaded(assetName);
                 img.onerror = () => { console.error(`Failed to load: ${assetName}`); assetLoaded(assetName); };
                 img.src = assetName;
             } else {
+                // Если есть другие типы - пропускаем, но считаем загруженными
+                console.warn(`Unknown asset type, skipping: ${assetName}`);
                 assetLoaded(assetName); 
             }
         });
@@ -792,7 +783,7 @@
     }
     
     document.addEventListener('DOMContentLoaded', () => {
-        // ЗАПУСК VK И PRELOADER (VK запускается *до* прелоадера)
+        // ЗАПУСК VK И PRELOADER
         initVK().then(() => {
             preloadAssets();
         });
@@ -801,6 +792,7 @@
 
     function initGameLogic() {
         // --- DOM Elements ---
+        const mainContainer = document.querySelector('.main-container'); // Need this for theme
         const mainMenuScreen = document.getElementById('main-menu-screen');
         const gameScreen = document.getElementById('game-screen');
         const boardElement = document.getElementById('game-board');
@@ -825,6 +817,9 @@
         
         let dragStart = null; let TILE_SIZE = 0;
         let lastTap = 0; 
+        
+        // 7. ПРИМЕНЯЕМ ТЕМУ ИЗ ЗАГРУЖЕННЫХ ДАННЫХ
+        updateTheme(currentTheme, true);
 
         // --- Core Game Logic ---
         function startGame(mode) {
@@ -1214,6 +1209,7 @@
             await processAllMatches();
         }
         
+        // 9. ИСПРАВЛЕНА ЛОГИКА СОЗДАНИЯ БОНУСОВ
         async function processAllMatches(swappedCoords = null) {
             let firstLoop = true;
             
@@ -1223,44 +1219,48 @@
                 
                 playSound('match');
                 
-                // 9. ИСПРАВЛЕНА ЛОГИКА СОЗДАНИЯ БОНУСОВ
                 const tilesToDestroy = new Set(matches);
-                let bonusToCreate = null;
-                let bestBonus = null;
+                const bonusesToCreate = [];
 
                 if (bonusInfo.length > 0) {
-                    let creationTile = null;
+                    const handledTilesForBonus = new Set();
                     
                     if (firstLoop && swappedCoords) {
                         const swappedTile = board[swappedCoords.r]?.[swappedCoords.c];
                         if (swappedTile) {
-                            bestBonus = bonusInfo
-                                .filter(b => b.tiles.has(swappedTile))
-                                .sort((a, b) => (b.type === 'rocket' ? 1 : 0) - (a.type === 'rocket' ? 1 : 0)) 
-                                [0];
+                            const bestBonus = bonusInfo
+                                .filter(b => b.tiles.has(swappedTile) && ![...b.tiles].some(t => handledTilesForBonus.has(t)))
+                                .sort((a, b) => (b.type === 'rocket' ? 1 : 0) - (a.type === 'rocket' ? 1 : 0))[0];
                             
                             if (bestBonus) {
-                                creationTile = swappedTile;
+                                bonusesToCreate.push({ r: swappedTile.r, c: swappedTile.c, type: bestBonus.type, tileToSave: swappedTile });
+                                bestBonus.tiles.forEach(t => handledTilesForBonus.add(t));
                             }
                         }
                     }
-                    
-                    if (!bestBonus && bonusInfo.length > 0) {
-                        bestBonus = bonusInfo.sort((a, b) => (b.type === 'rocket' ? 1 : 0) - (a.type === 'rocket' ? 1 : 0))[0];
-                        // Найти плитку из этого бонуса, которая все еще в "matches"
-                        creationTile = [...bestBonus.tiles].find(t => matches.has(t));
-                    }
 
-                    if (bestBonus && creationTile) {
-                        bonusToCreate = { r: creationTile.r, c: creationTile.c, type: bestBonus.type };
-                        // Убеждаемся, что *все* плитки, образующие бонус, будут уничтожены...
-                        bestBonus.tiles.forEach(t => tilesToDestroy.add(t));
-                        // ...кроме той, что *станет* бонусом
-                        tilesToDestroy.delete(creationTile);
-                    }
+                    bonusInfo.forEach(info => {
+                        const unhandledTiles = [...info.tiles].filter(t => !handledTilesForBonus.has(t));
+                        if (unhandledTiles.length > 0) {
+                            let creationTile = unhandledTiles.find(t => {
+                                const hMatch = getLine(t.r, t.c, 0, 1, t.color).concat(getLine(t.r, t.c, 0, -1, t.color).slice(1));
+                                const vMatch = getLine(t.r, t.c, 1, 0, t.color).concat(getLine(t.r, t.c, -1, 0, t.color).slice(1));
+                                return hMatch.length >= 3 && vMatch.length >= 3;
+                            }) || unhandledTiles[Math.floor(unhandledTiles.length / 2)];
+
+                            if (creationTile) {
+                                bonusesToCreate.push({ r: creationTile.r, c: creationTile.c, type: info.type, tileToSave: creationTile });
+                                info.tiles.forEach(t => handledTilesForBonus.add(t));
+                            }
+                        }
+                    });
                 }
                 
                 firstLoop = false; 
+
+                bonusesToCreate.forEach(bonus => {
+                    tilesToDestroy.delete(bonus.tileToSave);
+                });
                 
                 const unmovableToDestroy = findAdjacentUnmovables(matches); 
                 unmovableToDestroy.forEach(t => tilesToDestroy.add(t));
@@ -1272,34 +1272,44 @@
                 
                 await animateMatches(tilesToDestroy);
                 
-                if (bonusToCreate) {
-                    const tile = board[bonusToCreate.r]?.[bonusToCreate.c]; 
-                    if (tile) { // Он должен был выжить
+                bonusesToCreate.forEach(bonus => {
+                    const tile = board[bonus.r]?.[bonus.c]; 
+                    if (tile && tile === bonus.tileToSave) { 
                        const tileInner = tile.element.querySelector('.tile-inner');
-                       tileInner.className = 'tile-inner'; // Сброс (gem-red и т.д.)
+                       tileInner.className = 'tile-inner'; 
                        
-                       tile.bonus = bonusToCreate.type;
+                       tile.bonus = bonus.type;
                        tile.color = null; 
                        
-                       tileInner.classList.add(bonusToCreate.type);
+                       tileInner.classList.add(bonus.type); 
                        tileInner.classList.add('bonus-create');
                        
                        setTimeout(() => tileInner.classList.remove('bonus-create'), 400);
                     }
-                }
+                });
                 
                 await dropAndRefill();
             }
             checkGameStatus();
         }
         
+        function getLine(r, c, dr, dc, color) { 
+            const line = [];
+            const tileColor = color || board[r][c]?.color; 
+            if (!tileColor) return line;
+            let cr = r, cc = c;
+            while(cr >= 0 && cr < ROWS && cc >= 0 && cc < COLS && board[cr][cc]?.type === 'gem' && board[cr][cc]?.color === tileColor) {
+                line.push(board[cr][cc]);
+                cr += dr; cc += dc;
+            }
+            return line;
+        }
+
+        // 10. ИСПРАВЛЕНА findMatches (L/T)
         function findMatches(noBonuses = false) {
             const matches = new Set();
             const bonusInfo = [];
-            
-            const processedH = new Set(); 
-            const processedV = new Set(); 
-            const crossTiles = new Set(); 
+            const processed = new Set(); // Общий сет для L/T
 
             if (!noBonuses) {
                 for (let r = 0; r < ROWS; r++) {
@@ -1307,17 +1317,15 @@
                         const tile = board[r][c];
                         if (!tile || !tile.color) continue;
 
-                        const hMatch = getLine(r, c, 0, 1).concat(getLine(r, c, 0, -1).slice(1));
-                        const vMatch = getLine(r, c, 1, 0).concat(getLine(r, c, -1, 0).slice(1));
+                        const hMatch = getLine(r, c, 0, 1, tile.color).concat(getLine(r, c, 0, -1, tile.color).slice(1));
+                        const vMatch = getLine(r, c, 1, 0, tile.color).concat(getLine(r, c, -1, 0, tile.color).slice(1));
 
                         if (hMatch.length >= 3 && vMatch.length >= 3) {
                             const crossSet = new Set([...hMatch, ...vMatch]);
                             bonusInfo.push({ type: 'rocket', tiles: crossSet });
                             crossSet.forEach(t => {
                                 matches.add(t);
-                                processedH.add(t);
-                                processedV.add(t);
-                                crossTiles.add(t);
+                                processed.add(t);
                             });
                         }
                     }
@@ -1327,37 +1335,24 @@
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
                     const tile = board[r][c];
-                    if (!tile || !tile.color || processedH.has(tile)) continue;
+                    if (!tile || !tile.color || processed.has(tile)) continue;
                     
-                    const hMatch = getLine(r, c, 0, 1);
-                    hMatch.forEach(t => processedH.add(t));
-                    
-                    if (hMatch.length >= 3) hMatch.forEach(t => matches.add(t));
-                    
-                    if (!noBonuses && hMatch.length >= 4) {
-                        const isCross = hMatch.some(t => crossTiles.has(t));
-                        if (!isCross) {
+                    const hMatch = getLine(r, c, 0, 1, tile.color);
+                    if (hMatch.length >= 3) {
+                        hMatch.forEach(t => matches.add(t));
+                        if (!noBonuses && hMatch.length >= 4) {
                             bonusInfo.push({ type: hMatch.length === 4 ? 'bomb' : 'rocket', tiles: new Set(hMatch) });
                         }
+                        hMatch.forEach(t => processed.add(t));
                     }
-                }
-            }
-            
-             for (let c = 0; c < COLS; c++) {
-                for (let r = 0; r < ROWS; r++) {
-                    const tile = board[r][c];
-                    if (!tile || !tile.color || processedV.has(tile)) continue;
                     
-                    const vMatch = getLine(r, c, 1, 0);
-                    vMatch.forEach(t => processedV.add(t));
-                    
-                    if (vMatch.length >= 3) vMatch.forEach(t => matches.add(t));
-                    
-                    if (!noBonuses && vMatch.length >= 4) {
-                        const isCross = vMatch.some(t => crossTiles.has(t));
-                        if (!isCross) {
-                            bonusInfo.push({ type: vMatch.length === 4 ? 'bomb' : 'rocket', tiles: new Set(vMatch) });
+                    const vMatch = getLine(r, c, 1, 0, tile.color);
+                    if (vMatch.length >= 3) {
+                        vMatch.forEach(t => matches.add(t));
+                        if (!noBonuses && vMatch.length >= 4) {
+                             bonusInfo.push({ type: vMatch.length === 4 ? 'bomb' : 'rocket', tiles: new Set(vMatch) });
                         }
+                        vMatch.forEach(t => processed.add(t));
                     }
                 }
             }
@@ -1365,17 +1360,6 @@
             return { matches, bonusInfo };
         }
 
-        function getLine(r, c, dr, dc) {
-            const line = [];
-            const color = board[r][c]?.color;
-            if (!color) return line;
-            let cr = r, cc = c;
-            while(cr >= 0 && cr < ROWS && cc >= 0 && cc < COLS && board[cr][cc]?.color === color) {
-                line.push(board[cr][cc]);
-                cr += dr; cc += dc;
-            }
-            return line;
-        }
 
         function findAdjacentUnmovables(matches) {
             const toDestroy = new Set();
@@ -1404,7 +1388,7 @@
             }, 400));
         }
 
-        // 10. ИСПРАВЛЕНА АНИМАЦИЯ ПАДЕНИЯ
+        // 11. ИСПРАВЛЕНА АНИМАЦИЯ ПАДЕНИЯ
         async function dropAndRefill() {
             let maxDelay = 0;
             for (let c = 0; c < COLS; c++) { 
@@ -1429,7 +1413,7 @@
                     if (board[r][c] === null) {
                         const newTile = createTile(r, c, 'gem', getRandomColor());
                         newTile.element.style.top = `${GAP + (r - ROWS) * (TILE_SIZE + GAP)}px`;
-                        const delay = (c * 0.02 + fillCount * 0.08); // Используем fillCount
+                        const delay = (c * 0.02 + fillCount * 0.08); 
                         newTile.element.style.transitionDelay = `${delay}s`;
                         maxDelay = Math.max(maxDelay, delay);
                         newTiles.push(newTile);
@@ -1440,7 +1424,6 @@
             
             requestAnimationFrame(() => { 
                 newTiles.forEach(tile => {
-                    // Используем isInitial = true для правильной анимации падения
                     positionTile(tile, tile.r, tile.c, true); 
                 }); 
             });
@@ -1448,7 +1431,6 @@
             await new Promise(r => setTimeout(r, maxDelay * 1000 + 500)); 
             newTiles.forEach(tile => {
                 if (tile.element) {
-                    // Сбрасываем transition
                     tile.element.style.transition = 'top 0.3s ease-out, left 0.3s ease-out';
                     tile.element.style.transitionDelay = '0s';
                 }
@@ -1469,7 +1451,7 @@
             }
         }
         
-        // 11. ИСПРАВЛЕНА ЛОГИКА ПОДНЯТИЯ РЯДА
+        // 12. ИСПРАВЛЕНА ЛОГИКА ПОДЪЕМА РЯДА
         async function riseUnmovableBlocks() {
             isProcessing = true;
             
@@ -1561,8 +1543,8 @@
             const checkTile = (r, c) => {
                 const color = board[r][c]?.color;
                 if (!color) return false;
-                const hMatch = getLine(r, c, 0, 1).concat(getLine(r, c, 0, -1).slice(1));
-                const vMatch = getLine(r, c, 1, 0).concat(getLine(r, c, -1, 0).slice(1));
+                const hMatch = getLine(r, c, 0, 1, color).concat(getLine(r, c, 0, -1, color).slice(1));
+                const vMatch = getLine(r, c, 1, 0, color).concat(getLine(r, c, -1, 0, color).slice(1));
                 return hMatch.length >= 3 || vMatch.length >= 3;
             };
 
@@ -1635,7 +1617,6 @@
         function toggleMute() {
             isMuted = !muteToggle.checked;
             saveGameData();
-            // 12. ВОСПРОИЗВОДИМ ЗВУК *ПОСЛЕ* СОХРАНЕНИЯ
             if(!isMuted) playSound('tap');
         }
         muteToggle.addEventListener('change', toggleMute);
@@ -1674,11 +1655,11 @@
         }
         
         function updateTheme(newTheme, skipSave = false) {
-            document.body.className = newTheme;
+            // 13. ИСПРАВЛЕНА СМЕНА ФОНА
+            mainContainer.style.backgroundImage = `url('bg-${newTheme.replace('theme-', '')}.png')`;
             currentTheme = newTheme;
             
             document.querySelectorAll('.theme-selection button').forEach(btn => {
-                // 13. ИСПРАВЛЕНА ЛОГИКА СРАВНЕНИЯ (theme-space === theme-space)
                 btn.classList.toggle('active', btn.dataset.theme === newTheme.replace('theme-', ''));
             });
             if(!skipSave) saveGameData(); 
@@ -1688,10 +1669,8 @@
             const newTheme = e.target.dataset.theme;
             if (!newTheme) return;
             // 14. ИСПРАВЛЕНА ПЕРЕДАЧА ИМЕНИ ТЕМЫ
-            updateTheme(`theme-${newTheme}`);
+            updateTheme(newTheme);
         });
-
-        // 15. ЗАПУСК VK ПРОИСХОДИТ В DOMCONTENTLOADED
     }
     </script>
 </body>
