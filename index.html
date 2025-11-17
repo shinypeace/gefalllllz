@@ -656,8 +656,11 @@
         updateTheme(currentTheme, true); 
         updateStatsTable(); 
         
+        // 5. ЗАПУСК АУДИОКОНТЕКСТА И МУЗЫКИ (если надо)
+        // initAudio() теперь вызывается по первому клику,
+        // но мы заранее выставляем флаги, чтобы он знал, что делать
         if (!isMusicMuted) {
-            playMusic();
+            playMusic(); // Попытается сыграть, как только audioReady станет true
         }
     }
 
@@ -698,6 +701,7 @@
         }
     }
     
+    // 6. ИНИЦИАЛИЗАЦИЯ АУДИО ПО ПЕРВОМУ КЛИКУ
     document.body.addEventListener('pointerdown', initAudio, { once: true });
 
     function playSound(sound, time = Tone.now()) {
@@ -1654,13 +1658,14 @@
             `;
         }
         
+        // 13. ИСПРАВЛЕНА СМЕНА ФОНА
         function updateTheme(newTheme, skipSave = false) {
-            // 13. ИСПРАВЛЕНА СМЕНА ФОНА
+            document.body.className = newTheme; 
             mainContainer.style.backgroundImage = `url('bg-${newTheme.replace('theme-', '')}.png')`;
             currentTheme = newTheme;
             
             document.querySelectorAll('.theme-selection button').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.theme === newTheme.replace('theme-', ''));
+                btn.classList.toggle('active', btn.dataset.theme === newTheme);
             });
             if(!skipSave) saveGameData(); 
         }
