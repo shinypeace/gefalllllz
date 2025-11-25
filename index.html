@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>Тайна рун</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,44 +12,46 @@
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <style>
         :root {
-            /* Базовая палитра */
             --bg-main: #1a1a2e;
-            --bg-secondary: rgba(22, 33, 62, 0.9);
-            --bg-modal: rgba(15, 23, 42, 0.98);
-            --text-primary: #ff2e63;
-            --text-secondary: #e0e6ed;
-            --accent-color: #08d9d6;
-            --border-color: #ff2e63;
+            --bg-secondary: #16213e;
+            --bg-modal: rgba(22, 33, 62, 0.95);
+            --text-primary: #e94560;
+            --text-secondary: #ffffff;
+            --accent-color: #0f3460;
+            --border-color: #e94560;
             --font-main: 'Inter', sans-serif;
             --font-title: 'Lobster', cursive;
             --progress-bar-bg: #16213e;
-            --progress-bar-fill: #ff2e63;
+            --progress-bar-fill: #e94560;
         }
 
-        /* ТЕМЫ */
+        /* --- THEMES --- */
         .theme-space .main-container { background-image: url('bg-space.png'); }
         .theme-forest .main-container { background-image: url('bg-forest.png'); }
         .theme-ocean .main-container { background-image: url('bg-ocean.png'); }
         .theme-retro .main-container { background-image: url('bg-retro.png'); }
 
         .theme-forest {
-            --bg-main: #1b3a1b; --text-primary: #ffd700; --accent-color: #4caf50; --border-color: #ffd700;
+            --bg-main: #2d4c1e; --bg-secondary: #3e6d2b; --bg-modal: rgba(45, 76, 30, 0.95);
+            --text-primary: #f0a500; --accent-color: #1b3d1a; --border-color: #f0a500;
+            --progress-bar-bg: #3e6d2b; --progress-bar-fill: #f0a500;
         }
         .theme-ocean {
-            --bg-main: #001f3f; --text-primary: #00ffff; --accent-color: #0074d9; --border-color: #00ffff;
+            --bg-main: #003366; --bg-secondary: #00509e; --bg-modal: rgba(0, 51, 102, 0.95);
+            --text-primary: #87ceeb; --accent-color: #001f3f; --border-color: #87ceeb;
+            --progress-bar-bg: #00509e; --progress-bar-fill: #87ceeb;
         }
         .theme-retro {
-            --bg-main: #111; --text-primary: #39ff14; --accent-color: #bd00ff; --border-color: #39ff14;
+            --bg-main: #222222; --bg-secondary: #393939; --bg-modal: rgba(34, 34, 34, 0.98);
+            --text-primary: #00ff00; --accent-color: #555555; --border-color: #00ff00;
+            --progress-bar-bg: #393939; --progress-bar-fill: #00ff00;
         }
-
-        /* ОБЩИЕ СТИЛИ */
-        body {
-            font-family: var(--font-main); 
-            background-color: var(--bg-main); 
-            color: var(--text-secondary);
-            touch-action: none; overflow: hidden; height: 100vh; margin: 0;
-            user-select: none; -webkit-user-select: none;
+        .theme-retro .main-container {
+            background-image: linear-gradient(rgba(0,255,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,0,0.1) 1px, transparent 1px), url('bg-retro.png');
+            background-size: 20px 20px, 20px 20px, cover;
         }
+        
+        /* --- End of Themes --- */
 
         #preloader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -58,52 +60,109 @@
             z-index: 2000; transition: opacity 0.5s ease;
         }
         #loading-bar-container {
-            width: 70%; max-width: 300px; height: 10px; background: rgba(255,255,255,0.1);
-            border-radius: 5px; overflow: hidden; margin-top: 20px;
+            width: 80%; max-width: 300px; height: 20px;
+            background-color: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 10px; overflow: hidden;
+            box-shadow: 0 4px 0 0 var(--border-color);
         }
         #loading-bar-fill {
-            width: 0%; height: 100%; background-color: var(--text-primary); transition: width 0.3s;
+            width: 0%; height: 100%;
+            background-color: var(--text-primary);
+            transition: width 0.3s ease;
+        }
+        #loading-status {
+            margin-top: 1rem; font-size: 1rem; font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        body {
+            font-family: var(--font-main); background-color: var(--bg-main); color: var(--text-secondary);
+            touch-action: none; overflow: hidden; height: 100vh; margin: 0;
         }
 
         .main-container {
-            display: none; justify-content: center; align-items: center;
+            display: none; 
+            justify-content: center; align-items: center;
             height: 100%; width: 100%; overflow: hidden;
-            background-size: cover; background-position: center;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.3s ease;
         }
 
-        /* МЕНЮ И ЭКРАНЫ */
         .main-menu, .game-screen {
-            width: 100%; max-width: 500px; height: 100%;
-            display: flex; flex-direction: column; align-items: center;
-            padding: 1rem; box-sizing: border-box; position: relative;
+            width: 100%; max-width: 500px; /* Увеличено для широких экранов */
+            height: 100%; max-height: 900px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 1rem 1rem 80px 1rem; 
+            box-sizing: border-box; 
         }
 
-        .main-menu { justify-content: center; gap: 1rem; }
-        .game-screen { justify-content: flex-start; }
+        .main-menu {
+            justify-content: center; /* Центрируем контент */
+            gap: 2rem;
+        }
+        
+        /* Скрываем старый хедер меню, так как кнопки перенесены */
+        .menu-header { display: none; }
 
         .game-title {
-            font-family: var(--font-title); font-size: 4rem; line-height: 1.1;
-            color: var(--text-primary); text-align: center; margin-bottom: 2rem;
-            text-shadow: 3px 3px 0 var(--accent-color), 0 0 20px rgba(0,0,0,0.5);
+            font-family: var(--font-title);
+            font-size: 4rem; 
+            font-weight: normal; 
+            color: var(--text-primary);
+            text-shadow: 2px 2px 0px var(--accent-color), 4px 4px 0px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            animation: glow 1.5s ease-in-out infinite alternate;
+            text-align: center;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 2px 2px 0px var(--accent-color), 0 0 15px var(--text-primary); }
+            to { text-shadow: 2px 2px 0px var(--accent-color), 0 0 30px var(--text-primary); }
         }
 
-        /* КНОПКИ МЕНЮ */
+        .btn {
+            background-color: var(--accent-color); color: var(--text-secondary); border: 2px solid var(--border-color);
+            border-radius: 1rem; padding: 1rem 2rem; font-size: 1.25rem; font-weight: 600;
+            width: 100%; margin-bottom: 1rem; cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); text-transform: uppercase;
+        }
+        
         .btn-menu {
-            background: rgba(0, 0, 0, 0.4);
-            border: 2px solid var(--border-color); border-radius: 12px;
-            color: #fff; font-size: 1.4rem; font-weight: 800;
-            padding: 1rem; width: 80%; max-width: 300px;
-            cursor: pointer; transition: transform 0.1s, background 0.2s;
-            text-transform: uppercase; letter-spacing: 1px;
-            backdrop-filter: blur(5px);
-            margin-bottom: 0.8rem;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid var(--border-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border-radius: 0.5rem;
+            font-family: var(--font-main);
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 1rem 2rem;
+            color: var(--text-secondary);
+            width: 80%; /* Фиксированная ширина */
+            max-width: 300px;
+            margin-bottom: 1rem;
         }
-        .btn-menu:active { transform: scale(0.96); background: rgba(255,255,255,0.1); }
-
-        /* РЯД КНОПОК (НАСТРОЙКИ, ПРАВИЛА, СТАТИСТИКА) */
-        .menu-icons-row {
-            display: flex; justify-content: center; gap: 1rem;
-            width: 80%; max-width: 300px; margin-top: 0.5rem;
+        .btn-menu:hover {
+            background-color: var(--border-color); 
+            color: var(--bg-secondary);
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .btn-menu:active {
+            transform: translateY(1px); 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        /* НОВЫЕ КВАДРАТНЫЕ КНОПКИ */
+        .menu-buttons-row {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            width: 80%;
+            max-width: 300px;
+            margin-top: 0.5rem;
         }
         .icon-btn-square {
             width: 60px; height: 60px;
@@ -111,70 +170,142 @@
             border: 2px solid var(--accent-color);
             border-radius: 12px;
             display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: transform 0.1s;
-            backdrop-filter: blur(5px);
+            cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .icon-btn-square:active { transform: scale(0.9); }
-        .icon-btn-square svg { width: 32px; height: 32px; fill: var(--text-secondary); }
+        .icon-btn-square:active { transform: scale(0.95); }
+        .icon-btn-square svg { width: 32px; height: 32px; fill: var(--text-secondary); transition: fill 0.3s ease; }
+        .icon-btn-square:hover { background-color: var(--accent-color); }
+        .icon-btn-square:hover svg { fill: var(--bg-main); }
 
-        /* ИГРОВОЙ ИНТЕРФЕЙС */
+
+        .icon-btn {
+            background: rgba(0,0,0,0.2);
+            border: 2px solid var(--accent-color); 
+            border-radius: 50%;
+            width: 50px; height: 50px; 
+            display: flex; justify-content: center; align-items: center;
+            transition: all 0.3s ease;
+        }
+        .icon-btn:hover { background-color: var(--accent-color); transform: scale(1.1); }
+        .icon-btn svg { width: 24px; height: 24px; transition: fill 0.3s ease; }
+        .icon-btn .primary-path { fill: var(--text-secondary); }
+        .icon-btn:hover .primary-path { fill: var(--bg-main); }
+        
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-modal);
+            backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--bg-secondary); padding: 2rem; border-radius: 1.5rem; border: 2px solid var(--border-color);
+            width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transform: scale(0.9); transition: transform 0.3s ease;
+            max-height: 80vh; overflow-y: auto; 
+        }
+        .modal.active .modal-content { transform: scale(1); }
+        .modal-title { font-size: 2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.5rem; text-align: center; }
+        
+        .game-screen {
+             justify-content: flex-start; 
+        }
+
         .game-header {
-            width: 100%; display: flex; flex-wrap: wrap; gap: 0.5rem;
-            margin-bottom: 0.5rem; padding: 0.5rem;
-            background: var(--bg-secondary); border-radius: 1rem;
-            border: 1px solid rgba(255,255,255,0.1);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            padding: 0.25rem;
+            background: rgba(0,0,0,0.4); 
+            border-radius: 1.5rem; 
+            border: 1px solid var(--accent-color);
+            flex-shrink: 0;
+            gap: 0.5rem;
+            flex-wrap: wrap; 
         }
         .header-item {
-            display: flex; align-items: center; justify-content: center;
-            padding: 0.5rem; background: rgba(0,0,0,0.3);
-            border-radius: 0.5rem; flex-grow: 1; font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-secondary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            flex-grow: 1;
         }
-        #rise-progress-bar-container {
-            width: 100%; height: 6px; background: rgba(0,0,0,0.3);
-            border-radius: 3px; overflow: hidden; margin-top: 4px;
+        .header-item.score-container {
+            flex-grow: 2; 
+            color: var(--text-primary);
+            font-weight: 700;
         }
-        #rise-progress-bar {
-            width: 0%; height: 100%;
-            background: linear-gradient(90deg, var(--accent-color), var(--text-primary));
-            transition: width 0.3s ease;
+        .header-item svg { width: 20px; height: 20px; fill: var(--text-primary); margin-right: 0.5rem; }
+        .header-item span { font-size: 1rem; font-weight: 600; }
+        
+        .pause-btn-container {
+            padding: 0;
+            flex-grow: 0; 
+            width: 44px; 
+            height: 44px;
+        }
+        .pause-btn-container .icon-btn {
+            width: 44px; height: 44px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+        }
+        .pause-btn-container .icon-btn svg {
+            width: 20px; height: 20px;
         }
 
-        /* ИГРОВОЕ ПОЛЕ */
-        #game-board {
-            position: relative; 
-            /* Width calculation handles in JS for responsiveness */
+        #rise-progress-bar-container {
+            order: 3; 
             width: 100%;
-            background-color: rgba(0,0,0,0.3);
-            border: 2px solid rgba(255,255,255,0.1);
+            height: 8px;
+            background-color: var(--progress-bar-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.25rem;
+        }
+        #rise-progress-bar { width: 100%; height: 100%; background-color: var(--progress-bar-fill); transition: width 0.3s ease-in-out; }
+
+        #game-board {
+            position: relative;
+            /* Размеры задаются в JS для адаптивности */
+            width: 100%;
+            overflow: hidden;
+            background-color: rgba(0,0,0,0.2); 
             border-radius: 1rem;
+            box-sizing: border-box;
             margin: 0 auto;
-            /* Важно для предотвращения выхода за границы */
-            overflow: hidden; 
+            flex-grow: 0; 
+            flex-shrink: 0;
         }
 
         .tile {
-            position: absolute; 
-            display: flex; justify-content: center; align-items: center;
-            will-change: top, left, transform;
-            /* Z-index 10 для гемов, чтобы они были над фоном, но под модалками */
-            z-index: 10; 
+            position: absolute;
+            /* Плавное движение для падения */
+            transition: top 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), left 0.3s ease-out;
+            will-change: top, left;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
         }
         
-        /* Блоки камней должны быть ниже гемов при анимации падения, 
-           но так как гемы не должны "залетать" за них, мы используем логику.
-           Однако, если они наслаиваются, можно поднять z-index у блоков, 
-           но тогда гемы будут падать "за" ними, что тоже странно.
-           Правильнее: Гемы не должны быть в той же ячейке. */
-           
-        .tile.unmovable { z-index: 5; } /* Статичные блоки */
-
         .tile-inner {
-            width: 94%; height: 94%;
-            background-size: contain; background-repeat: no-repeat; background-position: center;
-            /* СТАТИЧНЫЕ ГЕМЫ - НИКАКОЙ АНИМАЦИИ FLOAT */
+            width: 100%; 
+            height: 100%;
+            border-radius: 0; 
+            box-shadow: none; 
+            transition: transform 0.2s ease, background-image 0.1s ease;
+            background-color: transparent !important;
+            background-size: contain; 
+            background-repeat: no-repeat;
+            background-position: center;
+            /* УБРАНА анимация парения */
         }
-
-        /* Ассеты */
+        
         .gem-red { background-image: url('gem-red.png'); }
         .gem-blue { background-image: url('gem-blue.png'); }
         .gem-green { background-image: url('gem-green.png'); }
@@ -182,788 +313,1384 @@
         .gem-purple { background-image: url('gem-purple.png'); }
         .gem-orange { background-image: url('gem-orange.png'); }
         
-        /* Бонусы пульсируют */
-        .bomb { background-image: url('bonus-bomb.png') !important; animation: pulse 1s infinite alternate; }
-        .rocket { background-image: url('bonus-rocket.png') !important; animation: pulse 1s infinite alternate; }
-        .unmovable .tile-inner { background-image: url('block-stone.png') !important; animation: none; }
-        
-        @keyframes pulse { from { transform: scale(0.95); } to { transform: scale(1.1); } }
+        /* БОНУСЫ ПУЛЬСИРУЮТ */
+        .bomb { background-image: url('bonus-bomb.png') !important; animation: pulse-bonus 1s infinite alternate; }
+        .rocket { background-image: url('bonus-rocket.png') !important; animation: pulse-bonus 1s infinite alternate; }
 
-        /* Анимации действий */
-        .tile.match .tile-inner { animation: matchPop 0.3s forwards; }
-        @keyframes matchPop { 0% { transform: scale(1); } 50% { transform: scale(1.2); filter: brightness(2); } 100% { transform: scale(0); opacity: 0; } }
-
-        .tile.shake .tile-inner { animation: shake 0.4s ease-in-out; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-
-        /* Модальные окна */
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-modal); z-index: 2000;
-            display: flex; justify-content: center; align-items: center;
-            opacity: 0; visibility: hidden; transition: 0.3s;
-        }
-        .modal.active { opacity: 1; visibility: visible; }
-        .modal-content {
-            background: #1f2937; padding: 2rem; border-radius: 1.5rem;
-            border: 2px solid var(--accent-color); width: 90%; max-width: 350px; text-align: center;
+        .tile.unmovable { z-index: 5; } /* Блоки ниже гемов */
+        .tile.unmovable .tile-inner {
+            width: 100%; height: 100%; border-radius: 0;
+            background-color: transparent !important; 
+            border: none;
+            background-image: url('block-stone.png') !important;
+            box-shadow: none;
+            animation: none !important;
         }
         
-        /* Свитчи (Ползунки) */
-        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        /* Плавное исчезновение */
+        .tile.match .tile-inner { animation: match 0.3s ease-in forwards; }
+        @keyframes match { 0% { transform: scale(1.1); filter: brightness(1.5); } 100% { transform: scale(0); opacity: 0; } }
+        
+        .tile.bonus-create .tile-inner {
+            animation: bonus-create-anim 0.4s ease-out;
+            z-index: 10;
+        }
+        @keyframes bonus-create-anim {
+            0% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .rocket-effect { 
+            position: absolute; 
+            background-color: rgba(255, 255, 255, 0.7); 
+            box-shadow: 0 0 15px 10px white; 
+            border-radius: 5px; 
+            pointer-events: none; 
+            z-index: 100;
+        }
+        .rocket-effect.row { animation: rocket-row 0.3s ease-out forwards; }
+        .rocket-effect.col { animation: rocket-col 0.3s ease-out forwards; }
+        @keyframes rocket-row { 0% { transform: scaleX(0.1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
+        @keyframes rocket-col { 0% { transform: scaleY(0.1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
+
+        .combo-effect {
+            position: absolute; background: white; border-radius: 50%; pointer-events: none; z-index: 100;
+            box-shadow: 0 0 20px 15px white; animation: combo-explode 0.4s ease-out forwards;
+        }
+        @keyframes combo-explode { 0% { transform: scale(0.2); opacity: 0.8; } 100% { transform: scale(4.5); opacity: 0; } }
+
+        .hidden { display: none !important; }
+
+        .stat-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .stat-table th, .stat-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--accent-color); }
+        .stat-table th { color: var(--text-primary); }
+        .stat-table .no-data td { text-align: center; color: #888; }
+        #final-score-value, #final-moves-value { color: var(--text-primary); font-weight: 700; }
+        
+        @keyframes pulse-bonus {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        .theme-selection button { width: 50px; height: 50px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: border-color 0.2s; }
+        .theme-selection button.active { border-color: var(--text-primary); transform: scale(1.1); }
+        #theme-space { background: #1a1a2e; } #theme-forest { background: #2d4c1e; }
+        #theme-ocean { background: #003366; } #theme-retro { background: #222222; }
+        
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        /* Зеленый когда включено (checked) */
-        input:checked + .slider { background-color: var(--text-primary); }
-        input:checked + .slider:before { transform: translateX(22px); }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #555; /* Серый по умолчанию (ВЫКЛ) */
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 26px; width: 26px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+        input:checked + .slider { background-color: var(--text-primary); /* Цветной когда ВКЛ */ }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .slider.round { border-radius: 34px; }
+        .slider.round:before { border-radius: 50%; }
 
-        /* Эффекты */
-        .rocket-effect { position: absolute; background: white; opacity: 0.8; z-index: 20; border-radius: 10px; pointer-events: none; }
+        #vk_ads_banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1001;
+        }
     </style>
 </head>
 <body class="theme-space">
-    <!-- PRELOADER -->
     <div id="preloader">
-        <h1 class="game-title" style="font-size: 3rem;">Тайна рун</h1>
-        <div id="loading-bar-container"><div id="loading-bar-fill"></div></div>
-        <div id="loading-status" style="margin-top: 10px;">Загрузка...</div>
+        <h1 class="game-title" style="font-size: 3rem; margin-bottom: 1rem;">Тайна рун</h1>
+        <div id="loading-bar-container">
+            <div id="loading-bar-fill"></div>
+        </div>
+        <div id="loading-status">Загрузка...</div>
     </div>
-
-    <!-- MUSIC -->
+    
     <audio id="bg-music" src="music.mp3" loop preload="auto"></audio>
 
     <div class="main-container">
-        <!-- MAIN MENU -->
         <div id="main-menu-screen" class="main-menu">
-            <div></div> <!-- Spacer top -->
+            <!-- Кнопки перенесены ниже -->
             
-            <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <div class="menu-center">
                 <h1 class="game-title">Тайна рун</h1>
+                <button id="classic-mode-btn" class="btn btn-menu">Классика</button>
+                <button id="hard-mode-btn" class="btn btn-menu" style="border-color: #ff4757; color: #ff4757;">Хард</button>
                 
-                <button id="classic-mode-btn" class="btn-menu">Классика</button>
-                <button id="hard-mode-btn" class="btn-menu" style="border-color: #ff4757; color: #ff4757;">Хард</button>
-                
-                <!-- NEW BUTTONS LAYOUT -->
-                <div class="menu-icons-row">
-                    <button id="settings-btn" class="icon-btn-square" aria-label="Настройки">
-                        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84a.484.484 0 0 0-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.04.17 0 .36.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.27.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.57 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.04-.22 0-.45-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                <!-- НОВЫЙ РЯД КНОПОК -->
+                <div class="menu-buttons-row">
+                    <button id="settings-btn" class="icon-btn-square" aria-label="Settings">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19.4 12.9c.04-.3.06-.6.06-.9s-.02-.6-.06-.9l2-1.6c.2-.2.2-.5 0-.7l-2-3.5c-.1-.2-.4-.3-.6-.2l-2.5 1c-.5-.4-1.1-.7-1.7-.9l-.4-2.7C14.6 2.2 14.3 2 14 2h-4c-.3 0-.6.2-.7.4l-.4 2.7c-.6.2-1.2.5-1.7.9l-2.5-1c-.2 0-.5.1-.6.3l-2 3.5c-.1.2-.1.5 0 .7l2 1.6c-.04.3-.06.6-.06.9s.02.6.06.9l-2 1.6c-.2.2-.2.5 0 .7l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7.9l.4 2.7c.1.2.4.4.7.4h4c.3 0 .6-.2.7-.4l.4-2.7c.6-.2 1.2-.5 1.7-.9l2.5 1c.2 0 .5-.1.6-.3l2-3.5c.1-.2.1-.5 0 .7l-2-1.6zM12 15.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
+                        </svg>
                     </button>
-                    <button id="rules-btn" class="icon-btn-square" aria-label="Правила">
-                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                     <button id="rules-btn" class="icon-btn-square" aria-label="Rules">
+                        <svg viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM11 17v-6h2v6h-2zM11 7v2h2V7h-2z"></path></svg>
                     </button>
-                    <button id="stats-btn" class="icon-btn-square" aria-label="Статистика">
-                        <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+                    <button id="stats-btn" class="icon-btn-square" aria-label="Stats">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-5h2v5zm4 0h-2V7h2v10zm4 0h-2v-3h2v3z"/></svg>
                     </button>
                 </div>
             </div>
-
-            <div></div> <!-- Spacer bottom -->
+            
+            <div style="height: 50px;"></div> <!-- Spacer -->
         </div>
-
-        <!-- GAME SCREEN -->
+        
         <div id="game-screen" class="game-screen hidden">
-            <div class="game-header">
-                <div class="header-item" style="flex: 2; justify-content: flex-start;">
-                    <span style="margin-right: 5px;">⭐</span> <span id="score">0</span>
+            <div class="game-header" style="flex-wrap: wrap;"> 
+                <div class="header-item score-container">
+                    <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                    <span id="score">0</span>
                 </div>
-                <div class="header-item" style="flex: 0;">
-                    <button id="pause-btn" style="background: none; border: none; font-size: 1.5rem;">⏸️</button>
+                <div class="pause-btn-container">
+                     <button id="pause-btn" class="icon-btn">
+                        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path class="primary-path" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+                     </button>
                 </div>
-                <div class="header-item">
+                <div class="header-item moves-container">
                     <span>Ход: <span id="moves-count">0</span></span>
                 </div>
                 <div id="rise-progress-bar-container"><div id="rise-progress-bar"></div></div>
             </div>
-
+            
             <div id="game-board"></div>
         </div>
     </div>
 
-    <!-- MODALS -->
+    <!-- Modals -->
+    <div id="pause-modal" class="modal"><div class="modal-content"><h2 class="modal-title">Пауза</h2><button id="resume-btn" class="btn">Продолжить</button><button id="restart-game-btn" class="btn">Начать заново</button><button id="main-menu-btn-pause" class="btn">Главное меню</button></div></div>
+    <div id="game-over-modal" class="modal"><div class="modal-content"><h2 class="modal-title">Игра окончена!</h2><p class="text-center text-lg mb-4">Ваш результат: <span id="final-score-value">0</span></p><p class="text-center text-lg mb-6">Ходов сделано: <span id="final-moves-value">0</span></p><button id="restart-game-over-btn" class="btn">Играть еще раз</button><button id="main-menu-btn-over" class="btn">Главное меню</button></div></div>
+    
     <div id="settings-modal" class="modal">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold mb-4 text-white">Настройки</h2>
-            
-            <div class="flex justify-between items-center w-full mb-4 px-2">
-                <span class="text-lg text-white">Звуки</span>
-                <label class="switch">
-                    <input type="checkbox" id="mute-toggle" checked>
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <div class="flex justify-between items-center w-full mb-6 px-2">
-                <span class="text-lg text-white">Музыка</span>
-                <label class="switch">
-                    <input type="checkbox" id="mute-music-toggle" checked>
-                    <span class="slider"></span>
-                </label>
+            <h2 class="modal-title">Настройки</h2>
+            <h3 class="text-xl mb-4 text-center">Выбор темы</h3>
+            <div class="theme-selection flex justify-center gap-4">
+                <button id="theme-space" data-theme="theme-space"></button>
+                <button id="theme-forest" data-theme="theme-forest"></button>
+                <button id="theme-ocean" data-theme="theme-ocean"></button>
+                <button id="theme-retro" data-theme="theme-retro"></button>
             </div>
             
-            <div class="grid grid-cols-4 gap-2 mb-6">
-                <button class="theme-btn w-10 h-10 rounded-full border-2" style="background:#1a1a2e" data-theme="theme-space"></button>
-                <button class="theme-btn w-10 h-10 rounded-full border-2" style="background:#1b3a1b" data-theme="theme-forest"></button>
-                <button class="theme-btn w-10 h-10 rounded-full border-2" style="background:#001f3f" data-theme="theme-ocean"></button>
-                <button class="theme-btn w-10 h-10 rounded-full border-2" style="background:#111" data-theme="theme-retro"></button>
+            <div class="flex justify-between items-center w-full mt-8">
+                <h3 class="text-xl text-left font-semibold" style="color: var(--text-secondary);">Звуки</h3>
+                <label class="switch">
+                    <input type="checkbox" id="mute-toggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="flex justify-between items-center w-full mt-4">
+                <h3 class="text-xl text-left font-semibold" style="color: var(--text-secondary);">Музыка</h3>
+                <label class="switch">
+                    <input type="checkbox" id="mute-music-toggle">
+                    <span class="slider round"></span>
+                </label>
             </div>
 
-            <button id="close-settings-btn" class="btn-menu" style="width:100%">Закрыть</button>
-        </div>
-    </div>
-
-    <div id="pause-modal" class="modal">
-        <div class="modal-content">
-            <h2 class="text-2xl font-bold mb-4 text-white">Пауза</h2>
-            <button id="resume-btn" class="btn-menu" style="width:100%">Продолжить</button>
-            <button id="restart-game-btn" class="btn-menu" style="width:100%">Заново</button>
-            <button id="main-menu-btn-pause" class="btn-menu" style="width:100%; border:1px solid #666; background:transparent;">Меню</button>
-        </div>
-    </div>
-
-    <div id="game-over-modal" class="modal">
-        <div class="modal-content">
-            <h2 class="text-2xl font-bold mb-2 text-white">Игра Окончена</h2>
-            <p class="mb-4 text-gray-300">Счет: <span id="final-score" class="text-yellow-400 font-bold">0</span></p>
-            <button id="restart-over-btn" class="btn-menu" style="width:100%">Играть снова</button>
-            <button id="menu-over-btn" class="btn-menu" style="width:100%; border:1px solid #666; background:transparent;">Меню</button>
-        </div>
-    </div>
-
-    <div id="rules-modal" class="modal">
-        <div class="modal-content text-left">
-            <h2 class="text-2xl font-bold mb-4 text-center text-white">Правила</h2>
-            <ul class="text-gray-300 list-disc pl-5 space-y-2 text-sm">
-                <li>Собирай 3+ одинаковых камня.</li>
-                <li>Каждый N ход поле поднимается!</li>
-                <li><strong>4 в ряд</strong> = Бомба (взрыв 3x3).</li>
-                <li><strong>5 в ряд</strong> = Ракета (чистит линии).</li>
-                <li>Не дай камням коснуться верха!</li>
-            </ul>
-            <button id="close-rules-btn" class="btn-menu mt-6" style="width:100%">Понятно</button>
+            <button id="close-settings-btn" class="btn mt-8">Закрыть</button>
         </div>
     </div>
     
-    <div id="stats-modal" class="modal">
+    <div id="rules-modal" class="modal">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold mb-4 text-white">Рекорды</h2>
-            <div id="stats-content" class="text-white"></div>
-            <button id="close-stats-btn" class="btn-menu mt-6" style="width:100%">Закрыть</button>
+            <h2 class="modal-title">Правила игры</h2>
+            <p class="mb-4" style="text-align: left;"><strong>Цель:</strong> Собирайте 3+ в ряд. Блоки снизу поднимаются с каждым ходом!</p>
+            <p class="mb-4" style="text-align: left;"><strong>Матчи:</strong><br>
+               - <strong>4 в ряд:</strong> <strong>Бомба</strong> (взрыв 3x3).<br>
+               - <strong>5 в ряд / L/T:</strong> <strong>Ракета</strong> (ряд + столбец).
+            </p>
+             <p class="mb-4" style="text-align: left;"><strong>Комбо:</strong><br>
+               - <strong>Бомба + Ракета:</strong> Взрыв 3 рядов и 3 столбцов.
+            </p>
+            <p class="mb-4" style="text-align: left;"><strong>Активация бонуса:</strong><br>
+               - Поменяйте бонус с любым элементом.<br>
+               - Тапните по бонусу дважды.
+            </p>
+             <p class="mb-4" style="text-align: left;"><strong>Блоки:</strong> Уничтожаются только *обычным* матчем (3+ в ряд) рядом с блоком.</p>
+            <button id="close-rules-btn" class="btn mt-6">Понятно</button>
         </div>
     </div>
-
-    <div id="vk_ads_banner" style="position:fixed; bottom:0; width:100%; z-index:1001;"></div>
+    
+    <div id="stats-modal" class="modal"><div class="modal-content"><h2 class="modal-title">Статистика</h2><table id="stats-table" class="stat-table"><thead><tr><th>Режим</th><th>Очки</th><th>Ходы</th></tr></thead><tbody></tbody></table><button id="close-stats-btn" class="btn mt-6">Закрыть</button></div></div>
+    
+    <div id="vk_ads_banner"></div>
 
     <script>
-    // --- GLOBAL VARS ---
-    const vkBridge = window.vkBridge;
     const ASSET_LIST = [
         'bg-space.png', 'bg-forest.png', 'bg-ocean.png', 'bg-retro.png',
         'gem-red.png', 'gem-blue.png', 'gem-green.png', 'gem-yellow.png', 'gem-purple.png', 'gem-orange.png',
         'bonus-bomb.png', 'bonus-rocket.png', 'block-stone.png'
     ];
     
-    // Settings
-    let isSoundOn = true; // Inverted logic: true = sound active
-    let isMusicOn = true;
-    let currentTheme = 'theme-space';
-    let stats = { classic: { score:0 }, hard: { score:0 } };
-    
-    // Audio
+    const vkBridge = window.vkBridge;
     let audioReady = false;
     let synths = {};
-    let musicPlayer = null;
-
-    // Game State
-    let board = [];
-    const ROWS = 10;
-    const COLS = 7;
-    const GAP = 2; // Reduced gap
-    let TILE_SIZE = 0;
-    let score = 0;
-    let movesCount = 0;
-    let totalMoves = 0;
-    let gameMode = 'classic';
-    let isPaused = false;
-    let isProcessing = false;
+    let musicPlayer;
+    let vkUserId = null;
+    let wasMusicPlaying = false; 
+    let interstitialReady = false; 
+    let bannerReady = false; 
     
-    // Input
-    let dragStart = null;
-    let lastTapTime = 0;
+    let isMuted = false;
+    let isMusicMuted = false;
+    let currentTheme = 'theme-space';
+    let stats = { classic: { score: 0, moves: 0 }, hard: { score: 0, moves: 0 } };
 
-    // --- INIT ---
-    document.addEventListener('DOMContentLoaded', async () => {
-        initVK();
-        await loadAssets();
-    });
-
+    // --- VK Init ---
     async function initVK() {
-        if(vkBridge) {
-            try {
-                await vkBridge.send('VKWebAppInit');
-                const user = await vkBridge.send('VKWebAppGetUserInfo').catch(() => null);
-                loadData(user ? user.id : 'local');
-            } catch(e) { console.log('VK Init fail', e); loadData('local'); }
-        } else {
-            loadData('local');
-        }
-    }
-
-    async function loadAssets() {
-        let loaded = 0;
-        const total = ASSET_LIST.length;
-        const bar = document.getElementById('loading-bar-fill');
-        
-        if(total === 0) { finishedLoading(); return; }
-
-        ASSET_LIST.forEach(src => {
-            const img = new Image();
-            img.src = src;
-            img.onload = () => { loaded++; updateBar(); };
-            img.onerror = () => { loaded++; updateBar(); };
-        });
-
-        function updateBar() {
-            bar.style.width = (loaded/total * 100) + '%';
-            if(loaded === total) setTimeout(finishedLoading, 500);
-        }
-    }
-
-    function finishedLoading() {
-        document.getElementById('preloader').style.display = 'none';
-        document.querySelector('.main-container').style.display = 'flex';
-        updateThemeUI();
-    }
-
-    // --- DATA ---
-    function loadData(userId) {
-        const key = 'runes_save_' + userId;
-        const raw = localStorage.getItem(key);
-        if(raw) {
-            const data = JSON.parse(raw);
-            isSoundOn = data.sound !== undefined ? data.sound : true;
-            isMusicOn = data.music !== undefined ? data.music : true;
-            currentTheme = data.theme || 'theme-space';
-            stats = data.stats || { classic: {score:0}, hard: {score:0} };
-        }
-        updateSettingsUI();
-        applyTheme(currentTheme);
-    }
-
-    function saveData() {
-        const data = { sound: isSoundOn, music: isMusicOn, theme: currentTheme, stats: stats };
-        localStorage.setItem('runes_save_' + (window.vkUserId || 'local'), JSON.stringify(data));
-    }
-
-    // --- AUDIO ---
-    async function initAudio() {
-        if(audioReady) return;
-        await Tone.start();
-        
-        const reverb = new Tone.Reverb(0.5).toDestination();
-        synths = {
-            tap: new Tone.Synth().connect(reverb),
-            match: new Tone.PolySynth(Tone.Synth).connect(reverb),
-            bonus: new Tone.NoiseSynth({ envelope: { decay: 0.5 } }).connect(reverb),
-            lose: new Tone.Synth({ oscillator: { type: 'sawtooth' } }).toDestination()
-        };
-        synths.tap.volume.value = -10;
-        synths.bonus.volume.value = -10;
-        
-        musicPlayer = new Tone.Player({ url: 'music.mp3', loop: true, volume: -15 }).toDestination();
-        
-        audioReady = true;
-        if(isMusicOn) playMusic();
-    }
-
-    function playSound(name) {
-        if(!isSoundOn || !audioReady) return;
         try {
-            if(name === 'tap') synths.tap.triggerAttackRelease('C5', '32n');
-            if(name === 'match') synths.match.triggerAttackRelease(['E5', 'G5'], '16n');
-            if(name === 'bonus') synths.bonus.triggerAttackRelease('8n');
-            if(name === 'lose') synths.lose.triggerAttackRelease('A2', '1n');
-        } catch(e) {}
-    }
+            await vkBridge.send('VKWebAppInit');
+            
+            vkBridge.subscribe(e => {
+                if (e.detail.type === 'VKWebAppViewHide') {
+                    if (musicPlayer && musicPlayer.state === 'started') {
+                        wasMusicPlaying = true;
+                        stopMusic();
+                    }
+                }
+                if (e.detail.type === 'VKWebAppViewRestore') {
+                    if (wasMusicPlaying && !isMusicMuted) {
+                        playMusic();
+                    }
+                    wasMusicPlaying = false;
+                }
+                if (e.detail.type === 'VKWebAppInterstitialReady') {
+                    interstitialReady = true;
+                }
+                if (e.detail.type === 'VKWebAppBannerAdUpdated' || e.detail.type === 'VKWebAppBannerAdReceived') {
+                    bannerReady = true;
+                }
+            });
 
-    function playMusic() {
-        if(isMusicOn && audioReady && musicPlayer && musicPlayer.state !== 'started') musicPlayer.start();
-    }
-    function stopMusic() {
-        if(musicPlayer && musicPlayer.state === 'started') musicPlayer.stop();
-    }
-
-    document.body.addEventListener('click', initAudio, { once: true });
-
-    // --- GAME LOGIC ---
-    function startGame(mode) {
-        gameMode = mode;
-        score = 0; movesCount = 0; totalMoves = 0;
-        isPaused = false; isProcessing = false;
-        
-        document.getElementById('main-menu-screen').classList.add('hidden');
-        document.getElementById('game-screen').classList.remove('hidden');
-        
-        updateUI();
-        initBoard();
-    }
-
-    function initBoard() {
-        const boardEl = document.getElementById('game-board');
-        boardEl.innerHTML = '';
-        board = [];
-        
-        // Calculate Size (Wider Logic)
-        const containerW = Math.min(window.innerWidth * 0.95, 500); // 95% width, max 500px
-        const containerH = window.innerHeight * 0.75; // 75% height
-        
-        // Try width-based first
-        TILE_SIZE = Math.floor((containerW - (COLS + 1) * GAP) / COLS);
-        // Check height constraint
-        const totalH = (TILE_SIZE + GAP) * ROWS + GAP;
-        if(totalH > containerH) {
-            TILE_SIZE = Math.floor((containerH - (ROWS + 1) * GAP) / ROWS);
+            const user = await vkBridge.send('VKWebAppGetUserInfo');
+            vkUserId = user.id;
+        } catch (error) {
+            console.warn("VK Init failed. Using fallback.", error);
+            vkUserId = 'test_user_001'; 
         }
         
-        boardEl.style.width = `${(TILE_SIZE + GAP) * COLS + GAP}px`;
-        boardEl.style.height = `${(TILE_SIZE + GAP) * ROWS + GAP}px`;
-
-        // Fill Data
-        for(let r=0; r<ROWS; r++) {
-            board[r] = [];
-            for(let c=0; c<COLS; c++) {
-                if(r === ROWS-1) createTile(r, c, 'unmovable');
-                else createTile(r, c, 'gem', getRandomColor());
-            }
-        }
-        
-        // Clear initial matches
-        resolveMatches(true);
-    }
-
-    function createTile(r, c, type, subtype=null) {
-        const div = document.createElement('div');
-        div.className = `tile ${type}`;
-        div.style.width = `${TILE_SIZE}px`;
-        div.style.height = `${TILE_SIZE}px`;
-        
-        const inner = document.createElement('div');
-        inner.className = 'tile-inner';
-        if(subtype) inner.classList.add(subtype);
-        div.appendChild(inner);
-
-        const tile = { r, c, type, subtype, el: div, id: Math.random() };
-        board[r][c] = tile;
-        
-        document.getElementById('game-board').appendChild(div);
-        updateTilePos(tile, true);
-        
-        return tile;
-    }
-
-    function updateTilePos(tile, instant=false) {
-        if(!tile) return;
-        const x = GAP + tile.c * (TILE_SIZE + GAP);
-        const y = GAP + tile.r * (TILE_SIZE + GAP);
-        
-        if(instant) {
-            tile.el.style.transition = 'none';
-            tile.el.style.left = x + 'px';
-            tile.el.style.top = y + 'px';
-        } else {
-            tile.el.style.transition = 'top 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), left 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
-            tile.el.style.left = x + 'px';
-            tile.el.style.top = y + 'px';
+        try {
+            await loadGameData();
+            showBannerAd();
+            vkBridge.send('VKWebAppPrepareInterstitial');
+        } catch (e) {
+            console.error("Error during data load or ad prep, but continuing to game:", e);
         }
     }
 
-    // --- INPUT ---
-    const boardEl = document.getElementById('game-board');
-    boardEl.addEventListener('pointerdown', e => {
-        if(isProcessing || isPaused) return;
-        const el = e.target.closest('.tile');
-        if(!el) return;
-        
-        const r = parseInt(getTileDataAttr(el).r);
-        const c = parseInt(getTileDataAttr(el).c);
-        if(board[r][c].type === 'gem') {
-            dragStart = { r, c, x: e.clientX, y: e.clientY };
-            playSound('tap');
-        }
-    });
-
-    boardEl.addEventListener('pointermove', e => {
-        if(!dragStart) return;
-        const dx = e.clientX - dragStart.x;
-        const dy = e.clientY - dragStart.y;
-        
-        if(Math.abs(dx) > 30 || Math.abs(dy) > 30) {
-            const dir = Math.abs(dx) > Math.abs(dy) 
-                ? (dx > 0 ? 'right' : 'left') 
-                : (dy > 0 ? 'down' : 'up');
-            attemptMove(dragStart.r, dragStart.c, dir);
-            dragStart = null;
-        }
-    });
-
-    boardEl.addEventListener('pointerup', () => {
-        if(dragStart) {
-            // Check double tap logic for bonuses if needed
-            dragStart = null;
-        }
-    });
-
-    function getTileDataAttr(el) {
-        // Find tile in board array by comparing element
-        for(let r=0; r<ROWS; r++) {
-            for(let c=0; c<COLS; c++) {
-                if(board[r][c] && board[r][c].el === el) return {r, c};
-            }
-        }
-        return {r:-1, c:-1};
+    // --- ADs ---
+    function showBannerAd() {
+        if (bannerReady) return; 
+        vkBridge.send('VKWebAppShowBannerAd', {
+            banner_location: 'bottom'
+        }).then(() => {
+            bannerReady = true;
+        }).catch(e => console.error("Banner Ad error", e));
     }
 
-    async function attemptMove(r, c, dir) {
-        let nr = r, nc = c;
-        if(dir === 'left') nc--;
-        if(dir === 'right') nc++;
-        if(dir === 'up') nr--;
-        if(dir === 'down') nr++;
-
-        if(nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) return;
-        
-        const t1 = board[r][c];
-        const t2 = board[nr][nc];
-
-        if(!t2 || t2.type === 'unmovable') {
-            shakeTile(t1);
+    function showInterstitialAd(callback) {
+        if (!interstitialReady) {
+            if(callback) callback();
+            vkBridge.send('VKWebAppPrepareInterstitial'); 
             return;
         }
 
-        isProcessing = true;
+        let musicWasPlaying = (musicPlayer && musicPlayer.state === 'started');
+        if(musicWasPlaying) stopMusic();
         
-        // Swap
-        await swapTiles(t1, t2);
-        
-        // Check Matches
-        const matchResult = findMatches();
-        // Check Bonuses interaction (e.g. Bomb + Rocket) - simplified logic: always check match
-        
-        if(matchResult.length > 0 || (t1.bonus || t2.bonus)) {
-            movesCount++; totalMoves++;
-            updateUI();
-            
-            // If bonus involved, trigger it immediately
-            if(t1.bonus || t2.bonus) {
-                 await resolveMatches();
-            } else {
-                 await resolveMatches();
+        vkBridge.send('VKWebAppShowInterstitialAd')
+            .catch(e => console.error("Interstitial Ad error", e))
+            .finally(() => {
+                if (musicWasPlaying && !isMusicMuted) {
+                    playMusic();
+                }
+                if (callback) callback();
+                interstitialReady = false;
+                vkBridge.send('VKWebAppPrepareInterstitial');
+            });
+    }
+
+    // --- Storage ---
+    async function saveGameData() {
+        if (!vkUserId) return;
+        const dataToSave = {
+            stats: stats,
+            isMuted: isMuted,
+            isMusicMuted: isMusicMuted,
+            currentTheme: currentTheme
+        };
+        const storageKey = `runes_data_v2_${vkUserId}`;
+        try {
+            await vkBridge.send('VKWebAppStorageSet', { key: storageKey, value: JSON.stringify(dataToSave) });
+        } catch (error) {
+            localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+        }
+    }
+
+    async function loadGameData() {
+        if (!vkUserId) return;
+        const storageKey = `runes_data_v2_${vkUserId}`;
+        let loadedData = null;
+        try {
+            const response = await vkBridge.send('VKWebAppStorageGet', { keys: [storageKey] });
+            if (response.keys[0]?.value && response.keys[0].value !== "") {
+                loadedData = JSON.parse(response.keys[0].value);
             }
-            
-            // Check Rise
-            const threshold = gameMode === 'classic' ? 5 : 3;
-            if(totalMoves % threshold === 0) {
-                await riseBoard();
-            }
+        } catch (error) {
+            const localData = localStorage.getItem(storageKey);
+            if (localData) loadedData = JSON.parse(localData);
+        }
+
+        if (loadedData) {
+            stats = loadedData.stats || { classic: { score: 0, moves: 0 }, hard: { score: 0, moves: 0 } };
+            isMuted = loadedData.isMuted === undefined ? false : loadedData.isMuted; 
+            isMusicMuted = loadedData.isMusicMuted === undefined ? false : loadedData.isMusicMuted; 
+            currentTheme = loadedData.currentTheme || 'theme-space';
         } else {
-            // Revert
-            await swapTiles(t1, t2);
-            shakeTile(t1);
-            shakeTile(t2);
+            stats = { classic: { score: 0, moves: 0 }, hard: { score: 0, moves: 0 } };
+            isMuted = false; 
+            isMusicMuted = false; 
+            currentTheme = 'theme-space';
         }
-        
-        isProcessing = false;
-        checkGameOver();
-    }
 
-    function swapTiles(t1, t2) {
-        // Update Array
-        board[t1.r][t1.c] = t2;
-        board[t2.r][t2.c] = t1;
+        updateMuteButton();
+        updateMusicMuteButton();
+        updateTheme(currentTheme, true); 
+        updateStatsTable(); 
         
-        // Update Coords
-        const tempR = t1.r, tempC = t1.c;
-        t1.r = t2.r; t1.c = t2.c;
-        t2.r = tempR; t2.c = tempC;
-        
-        updateTilePos(t1);
-        updateTilePos(t2);
-        
-        return new Promise(r => setTimeout(r, 300));
-    }
-    
-    function shakeTile(t) {
-        t.el.classList.add('shake');
-        setTimeout(() => t.el.classList.remove('shake'), 400);
-    }
-
-    // --- MATCH LOGIC ---
-    function findMatches() {
-        let matches = new Set();
-        // H
-        for(let r=0; r<ROWS; r++) {
-            for(let c=0; c<COLS-2; c++) {
-                const t1 = board[r][c], t2 = board[r][c+1], t3 = board[r][c+2];
-                if(t1 && t2 && t3 && t1.type=='gem' && t2.type=='gem' && t3.type=='gem') {
-                    if(t1.subtype === t2.subtype && t2.subtype === t3.subtype) {
-                        matches.add(t1); matches.add(t2); matches.add(t3);
-                    }
-                }
-            }
+        if (!isMusicMuted) {
+            playMusic(); 
         }
-        // V
-        for(let c=0; c<COLS; c++) {
-            for(let r=0; r<ROWS-2; r++) {
-                const t1 = board[r][c], t2 = board[r+1][c], t3 = board[r+2][c];
-                if(t1 && t2 && t3 && t1.type=='gem' && t2.type=='gem' && t3.type=='gem') {
-                    if(t1.subtype === t2.subtype && t2.subtype === t3.subtype) {
-                        matches.add(t1); matches.add(t2); matches.add(t3);
-                    }
-                }
-            }
-        }
-        return Array.from(matches);
     }
 
-    async function resolveMatches(silent=false) {
-        let matches = findMatches();
-        
-        while(matches.length > 0) {
-            if(!silent) playSound('match');
-            score += matches.length * 10;
-            updateUI();
 
-            // Animate Destruction
-            const promises = matches.map(t => {
-                t.el.classList.add('match');
-                return new Promise(r => setTimeout(r, 300));
-            });
-            await Promise.all(promises);
-
-            // Remove from DOM and Logic
-            matches.forEach(t => {
-                t.el.remove();
-                board[t.r][t.c] = null;
-            });
-
-            // Drop
-            await dropAndRefill(silent);
+    // --- Audio ---
+    async function initAudio() {
+        if (audioReady) return;
+        try {
+            await Tone.start();
             
-            // Re-check
-            matches = findMatches();
+            synths = {
+                tap: new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination(),
+                match: new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.2 } }).toDestination(),
+                bomb: new Tone.NoiseSynth({ noise: { type: 'brown' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.1 } }).toDestination(),
+                rocket: new Tone.NoiseSynth({ noise: { type: 'white' }, filter: { Q: 2, type: 'bandpass', frequency: 1000 }, envelope: { attack: 0.05, decay: 0.2, sustain: 0, release: 0.1 } }).toDestination(),
+                combo: new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.2 } }).toDestination(),
+                lose: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 0.2 } }).toDestination()
+            };
+            synths.bomb.volume.value = -10;
+            synths.rocket.volume.value = -15;
+            synths.combo.volume.value = -8;
+
+            musicPlayer = new Tone.Player({
+                url: "music.mp3",
+                loop: true,
+                volume: -12
+            }).toDestination();
+            
+            await Tone.loaded(); 
+            
+            audioReady = true;
+            if (!isMusicMuted) {
+                playMusic(); 
+            }
+        } catch (e) {
+            console.error("Audio context failed to start:", e);
+        }
+    }
+    
+    document.body.addEventListener('pointerdown', initAudio, { once: true });
+
+    function playSound(sound, time = Tone.now()) {
+        if (!audioReady || isMuted || !synths[sound]) return; 
+        try {
+            if (sound === 'tap') synths.tap.triggerAttackRelease('C5', '8n', time);
+            else if (sound === 'match') synths.match.triggerAttackRelease(['C4', 'E4', 'G4'], '8n', time);
+            else if (sound === 'bomb') synths.bomb.triggerAttackRelease('2n', time);
+            else if (sound === 'rocket') {
+                synths.rocket.filter.frequency.setValueAtTime(500, time);
+                synths.rocket.filter.frequency.linearRampToValueAtTime(5000, time + 0.1);
+                synths.rocket.triggerAttackRelease('4n', time);
+            }
+            else if (sound === 'combo') synths.combo.triggerAttackRelease('1n', time);
+            else if (sound === 'lose') synths.lose.triggerAttackRelease('C3', '2n', time);
+        } catch (e) { console.error("Sound play error:", e); }
+    }
+
+    function playMusic() {
+        if (isMusicMuted) return;
+        if (!audioReady || !musicPlayer) {
+            return; 
+        }
+        if (musicPlayer.state !== 'started') {
+            musicPlayer.start().catch(e => console.error("Music start error", e));
+        }
+    }
+    
+    function stopMusic() {
+        if (audioReady && musicPlayer && musicPlayer.state === 'started') {
+            musicPlayer.stop();
         }
     }
 
-    async function dropAndRefill(silent) {
-        let moved = false;
-        
-        // 1. Drop existing
-        for(let c=0; c<COLS; c++) {
-            for(let r=ROWS-2; r>=0; r--) { // Start from above bottom
-                if(board[r][c] && board[r][c].type !== 'unmovable') {
-                    let dest = r;
-                    while(dest+1 < ROWS && board[dest+1][c] === null) {
-                        dest++;
-                    }
-                    if(dest !== r) {
-                        const tile = board[r][c];
-                        board[r][c] = null;
-                        board[dest][c] = tile;
-                        tile.r = dest;
-                        updateTilePos(tile);
-                        moved = true;
-                    }
-                }
+    // --- Asset Preloader ---
+    function preloadAssets() {
+        let assetsLoaded = 0;
+        const totalAssets = ASSET_LIST.length;
+        const loadingBarFill = document.getElementById('loading-bar-fill');
+        const loadingStatus = document.getElementById('loading-status');
+        loadingStatus.textContent = `Загружено 0 из ${totalAssets}`;
+        let gameStarted = false;
+
+        // Force Start Timer (Safety Net)
+        const safetyTimer = setTimeout(() => {
+            if (!gameStarted) {
+                console.log("Forcing game start due to timeout");
+                showMainMenu();
             }
-        }
-        
-        if(moved && !silent) await new Promise(r => setTimeout(r, 300));
+        }, 3000);
 
-        // 2. Refill from top
-        const newTiles = [];
-        for(let c=0; c<COLS; c++) {
-            for(let r=0; r<ROWS; r++) {
-                if(board[r][c] === null) {
-                    // Safety check: Don't spawn if below is unmovable? 
-                    // No, unmovable is occupied, so board[r][c] wouldn't be null if unmovable was there.
-                    // But if unmovable is at r+1, we stop at r.
-                    
-                    const tile = createTile(r, c, 'gem', getRandomColor());
-                    // Start position above screen
-                    tile.el.style.transition = 'none';
-                    tile.el.style.top = `-${TILE_SIZE}px`;
-                    
-                    // Force reflow
-                    tile.el.offsetHeight;
-                    
-                    // Animate to proper pos
-                    newTiles.push(tile);
-                }
+        if (totalAssets === 0) {
+            showMainMenu();
+            return;
+        }
+
+        const assetLoaded = (assetName) => {
+            if(gameStarted) return;
+            assetsLoaded++;
+            const percent = (assetsLoaded / totalAssets) * 100;
+            loadingBarFill.style.width = `${percent}%`;
+            loadingStatus.textContent = `Загружено ${assetsLoaded} из ${totalAssets}`;
+            
+            if (assetsLoaded === totalAssets) {
+                clearTimeout(safetyTimer);
+                setTimeout(showMainMenu, 300); 
             }
-        }
-        
-        if(newTiles.length > 0) {
-             requestAnimationFrame(() => {
-                 newTiles.forEach(t => updateTilePos(t));
-             });
-             if(!silent) await new Promise(r => setTimeout(r, 350));
-        }
-    }
+        };
 
-    // --- RISE MECHANIC (CRITICAL FIX) ---
-    async function riseBoard() {
-        isProcessing = true;
-        
-        // 1. Check Game Over before animating (if top row has stones)
-        for(let c=0; c<COLS; c++) {
-            if(board[0][c] && board[0][c].type === 'unmovable') {
-                gameOver();
-                return;
+        ASSET_LIST.forEach(assetName => {
+            if (assetName.endsWith('.png')) {
+                const img = new Image();
+                img.onload = () => assetLoaded(assetName);
+                img.onerror = () => { console.error(`Failed to load: ${assetName}`); assetLoaded(assetName); };
+                img.src = assetName;
+            } else {
+                assetLoaded(assetName); 
             }
-        }
-
-        // 2. Destroy Top Row
-        for(let c=0; c<COLS; c++) {
-            if(board[0][c]) {
-                board[0][c].el.remove();
-            }
-        }
-        
-        // 3. Shift Logic Up
-        for(let r=1; r<ROWS; r++) {
-            for(let c=0; c<COLS; c++) {
-                board[r-1][c] = board[r][c];
-                if(board[r-1][c]) board[r-1][c].r = r-1;
-            }
-        }
-        
-        // 4. Create New Bottom Row (Logic)
-        // IMPORTANT: Mark it occupied IMMEDIATELY so drop logic doesn't put gems here
-        for(let c=0; c<COLS; c++) {
-            board[ROWS-1][c] = { type: 'placeholder' }; // Temporary placeholder logic check
-        }
-        
-        // 5. Animate Move Up
-        for(let r=0; r<ROWS-1; r++) {
-            for(let c=0; c<COLS; c++) {
-                updateTilePos(board[r][c]);
-            }
-        }
-        
-        // 6. Spawn Visual Stones at Bottom
-        for(let c=0; c<COLS; c++) {
-            const tile = createTile(ROWS-1, c, 'unmovable');
-            // Animate entrance from bottom
-            tile.el.style.transition = 'none';
-            tile.el.style.top = `${(ROWS) * (TILE_SIZE + GAP)}px`;
-            // Trigger reflow
-            tile.el.offsetHeight;
-            updateTilePos(tile); // Animate to r=9
-        }
-
-        await new Promise(r => setTimeout(r, 400));
-        
-        // Refill logic handles empty spots created by shift (though typically shift fills space)
-        // But if we had empty spots, we need to fill them.
-        // Wait, shifting up preserves holes. dropAndRefill needs to run.
-        await dropAndRefill(false);
-        
-        isProcessing = false;
-        checkGameOver();
-    }
-
-    function checkGameOver() {
-        // Simple check: is top row unmovable?
-        for(let c=0; c<COLS; c++) {
-            if(board[0][c] && board[0][c].type === 'unmovable') {
-                gameOver();
-                return;
-            }
-        }
-    }
-
-    function gameOver() {
-        playSound('lose');
-        if(score > stats[gameMode].score) stats[gameMode].score = score;
-        saveData();
-        
-        document.getElementById('final-score').innerText = score;
-        document.getElementById('game-over-modal').classList.add('active');
-    }
-
-    // --- UI HELPERS ---
-    function getRandomColor() { return ['gem-red','gem-blue','gem-green','gem-yellow','gem-purple','gem-orange'][Math.floor(Math.random()*6)]; }
-    
-    function updateUI() {
-        document.getElementById('score').innerText = score;
-        document.getElementById('moves-count').innerText = totalMoves;
-        const threshold = gameMode === 'classic' ? 5 : 3;
-        const prog = (totalMoves % threshold) / threshold * 100;
-        document.getElementById('rise-progress-bar').style.width = prog + '%';
-    }
-
-    // --- BUTTONS EVENTS ---
-    document.getElementById('classic-mode-btn').onclick = () => startGame('classic');
-    document.getElementById('hard-mode-btn').onclick = () => startGame('hard');
-    
-    document.getElementById('settings-btn').onclick = () => document.getElementById('settings-modal').classList.add('active');
-    document.getElementById('close-settings-btn').onclick = () => document.getElementById('settings-modal').classList.remove('active');
-    
-    document.getElementById('rules-btn').onclick = () => document.getElementById('rules-modal').classList.add('active');
-    document.getElementById('close-rules-btn').onclick = () => document.getElementById('rules-modal').classList.remove('active');
-    
-    document.getElementById('stats-btn').onclick = () => {
-        document.getElementById('stats-modal').classList.add('active');
-        document.getElementById('stats-content').innerHTML = `
-            <p>Классика: ${stats.classic.score}</p>
-            <p>Хард: ${stats.hard.score}</p>
-        `;
-    };
-    document.getElementById('close-stats-btn').onclick = () => document.getElementById('stats-modal').classList.remove('active');
-
-    // Pause
-    document.getElementById('pause-btn').onclick = () => { isPaused = true; document.getElementById('pause-modal').classList.add('active'); };
-    document.getElementById('resume-btn').onclick = () => { isPaused = false; document.getElementById('pause-modal').classList.remove('active'); };
-    document.getElementById('restart-game-btn').onclick = () => { document.getElementById('pause-modal').classList.remove('active'); startGame(gameMode); };
-    document.getElementById('main-menu-btn-pause').onclick = () => window.location.reload(); 
-    
-    document.getElementById('restart-over-btn').onclick = () => { document.getElementById('game-over-modal').classList.remove('active'); startGame(gameMode); };
-    document.getElementById('menu-over-btn').onclick = () => window.location.reload();
-
-    // Toggle Logic (Inverted fixed: Checked = ON)
-    const sToggle = document.getElementById('mute-toggle');
-    const mToggle = document.getElementById('mute-music-toggle');
-    
-    function updateSettingsUI() {
-        sToggle.checked = isSoundOn;
-        mToggle.checked = isMusicOn;
+        });
     }
     
-    sToggle.onchange = () => {
-        isSoundOn = sToggle.checked;
-        saveData();
-    };
-    mToggle.onchange = () => {
-        isMusicOn = mToggle.checked;
-        if(isMusicOn) playMusic(); else stopMusic();
-        saveData();
-    };
-
-    // Theme Logic
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.onclick = () => applyTheme(btn.dataset.theme);
+    function showMainMenu() {
+        const preloader = document.getElementById('preloader');
+        const mainContainer = document.querySelector('.main-container');
+        preloader.style.opacity = '0';
+        setTimeout(() => {
+            preloader.style.display = 'none';
+            mainContainer.style.display = 'flex'; 
+            initGameLogic(); 
+        }, 500);
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        initVK().then(() => {
+            preloadAssets();
+        });
     });
-    
-    function applyTheme(t) {
-        currentTheme = t;
-        document.body.className = t;
-        document.querySelector('.main-container').style.backgroundImage = `url('bg-${t.replace('theme-','')}.png')`;
-        saveData();
+
+
+    function initGameLogic() {
+        const mainContainer = document.querySelector('.main-container'); 
+        const mainMenuScreen = document.getElementById('main-menu-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const boardElement = document.getElementById('game-board');
+        const scoreElement = document.getElementById('score');
+        const movesCountElement = document.getElementById('moves-count');
+        const riseProgressBar = document.getElementById('rise-progress-bar');
+        const modals = document.querySelectorAll('.modal');
+        const muteToggle = document.getElementById('mute-toggle');
+        const muteMusicToggle = document.getElementById('mute-music-toggle');
+
+        const ROWS = 10; const COLS = 7; const GAP = 4; 
+        const COLORS = [
+            'gem-red', 'gem-blue', 'gem-green',
+            'gem-yellow', 'gem-purple', 'gem-orange'
+        ];
+        const UNMOVABLE_IMG = 'block-stone.png'; 
+        
+        let board = []; let score = 0; let movesCount = 0; let totalMoves = 0;
+        let gameMode = 'classic'; let isPaused = false;
+        let isProcessing = false; 
+        
+        let dragStart = null; let TILE_SIZE = 0;
+        let lastTap = 0; 
+        
+        updateTheme(currentTheme, true);
+
+        // --- Core Game Logic ---
+        function startGame(mode) {
+            gameMode = mode;
+            score = 0; movesCount = 0; totalMoves = 0;
+            isPaused = false; isProcessing = false;
+            updateScore(0);
+            updateMovesDisplay();
+            
+            mainMenuScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            
+            showBannerAd();
+            
+            requestAnimationFrame(() => {
+                initBoard();
+            });
+        }
+
+        function initBoard() {
+            boardElement.innerHTML = '';
+            board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+            
+            resizeBoard(); 
+
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (r >= ROWS - 1) {
+                        createTile(r, c, 'unmovable');
+                    } else {
+                        createTile(r, c, 'gem', getRandomColor());
+                    }
+                }
+            }
+            while (true) {
+                const { matches } = findMatches(true); 
+                if (matches.size === 0) break;
+                matches.forEach(tile => {
+                    if (tile) { 
+                        tile.element.remove();
+                        createTile(tile.r, tile.c, 'gem', getRandomColor());
+                    }
+                });
+            }
+        }
+        
+        function resizeBoard() {
+            const boardContainerWidth = window.innerWidth; // Используем всю ширину окна
+            const boardContainerHeight = window.innerHeight * 0.75; // 75% высоты экрана
+
+            // Рассчитываем размер плитки, чтобы занять 95% ширины, но не выйти за пределы высоты
+            let sizeFromWidth = (boardContainerWidth * 0.95 - (COLS + 1) * GAP) / COLS;
+            
+            // Ограничиваем максимальный размер плитки, чтобы не было гигантов на ПК
+            sizeFromWidth = Math.min(sizeFromWidth, 70);
+
+            let boardHeight = (sizeFromWidth + GAP) * ROWS + GAP;
+            
+            // Если слишком высоко, считаем от высоты
+            if (boardHeight > boardContainerHeight) {
+                TILE_SIZE = (boardContainerHeight - (ROWS + 1) * GAP) / ROWS;
+            } else {
+                TILE_SIZE = sizeFromWidth;
+            }
+
+            let boardWidth = (TILE_SIZE + GAP) * COLS + GAP;
+
+            boardElement.style.width = `${boardWidth}px`;
+            boardElement.style.height = `${(TILE_SIZE + GAP) * ROWS + GAP}px`;
+            boardElement.style.margin = '0 auto';
+            
+            boardElement.querySelectorAll('.tile').forEach(tileEl => {
+                const r = parseInt(tileEl.dataset.r);
+                const c = parseInt(tileEl.dataset.c);
+                tileEl.style.width = `${TILE_SIZE}px`;
+                tileEl.style.height = `${TILE_SIZE}px`;
+                tileEl.style.left = `${GAP + c * (TILE_SIZE + GAP)}px`;
+                tileEl.style.top = `${GAP + r * (TILE_SIZE + GAP)}px`;
+            });
+        }
+        window.addEventListener('resize', resizeBoard);
+        
+        function createTile(r, c, type, color = null, bonus = null) {
+            const tileElement = document.createElement('div');
+            tileElement.classList.add('tile');
+            
+            const tileInner = document.createElement('div');
+            tileInner.classList.add('tile-inner');
+            tileElement.appendChild(tileInner);
+            
+            const tileData = { r, c, type, color, bonus, element: tileElement, id: `tile-${r}-${c}-${Math.random()}` };
+            board[r][c] = tileData;
+            
+            tileElement.dataset.r = r;
+            tileElement.dataset.c = c;
+            
+            if (type === 'gem') {
+                if (color) {
+                     tileInner.classList.add(color);
+                }
+                if (bonus) {
+                    tileInner.classList.add(bonus); 
+                    tileData.color = null; 
+                }
+            } else if (type === 'unmovable') {
+                tileElement.classList.add('unmovable');
+                tileInner.style.backgroundImage = `url('${UNMOVABLE_IMG}')`;
+            }
+            
+            positionTile(tileData, r, c);
+            boardElement.appendChild(tileElement);
+            return tileData;
+        }
+        
+        function positionTile(tileData, r, c, isInitial = false) {
+            tileData.r = r; tileData.c = c;
+            tileData.element.dataset.r = r; tileData.element.dataset.c = c;
+            tileData.element.style.width = `${TILE_SIZE}px`;
+            tileData.element.style.height = `${TILE_SIZE}px`;
+            
+            const targetTop = GAP + r * (TILE_SIZE + GAP);
+            const targetLeft = GAP + c * (TILE_SIZE + GAP);
+
+            if (isInitial) {
+                 const delay = (c * 0.02 + r * 0.05); 
+                 tileData.element.style.transition = 'top 0.5s ease-out, left 0.3s ease-out';
+                 tileData.element.style.transitionDelay = `${delay}s`;
+                 tileData.element.style.top = `${targetTop - boardElement.clientHeight}px`;
+                 tileData.element.style.left = `${targetLeft}px`;
+                 requestAnimationFrame(() => {
+                     tileData.element.style.top = `${targetTop}px`;
+                 });
+                 setTimeout(() => {
+                     tileData.element.style.transition = 'top 0.3s ease-out, left 0.3s ease-out';
+                     tileData.element.style.transitionDelay = '0s';
+                 }, delay * 1000 + 500);
+            } else {
+                 tileData.element.style.transition = 'top 0.3s ease-out, left 0.3s ease-out';
+                 tileData.element.style.transitionDelay = '0s';
+                 tileData.element.style.left = `${targetLeft}px`;
+                 tileData.element.style.top = `${targetTop}px`;
+            }
+        }
+
+        boardElement.addEventListener('pointerdown', onPointerDown);
+        boardElement.addEventListener('pointermove', onPointerMove);
+        boardElement.addEventListener('pointerup', onPointerUp);
+        boardElement.addEventListener('pointerleave', onPointerUp); 
+
+        function onPointerDown(e) {
+            if (isProcessing || isPaused) return;
+            playSound('tap'); 
+            
+            const tileElement = e.target.closest('.tile');
+            if (!tileElement) return;
+            
+            const r = parseInt(tileElement.dataset.r);
+            const c = parseInt(tileElement.dataset.c);
+            const tile = board[r]?.[c];
+
+            if (tile && tile.type === 'gem') {
+                dragStart = { r, c, x: e.clientX, y: e.clientY, moved: false };
+            }
+        }
+
+        function onPointerMove(e) {
+            if (!dragStart) return;
+            const dx = e.clientX - dragStart.x;
+            const dy = e.clientY - dragStart.y;
+
+            if (!dragStart.moved && (Math.abs(dx) > TILE_SIZE * 0.3 || Math.abs(dy) > TILE_SIZE * 0.3)) {
+                dragStart.moved = true; 
+                let dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+                handleSwipe(dragStart.r, dragStart.c, dir);
+                dragStart = null; 
+            }
+        }
+
+        async function onPointerUp() {
+            if (dragStart && !dragStart.moved) {
+                const tile = board[dragStart.r][dragStart.c];
+                const currentTime = new Date().getTime();
+                
+                if (currentTime - lastTap < 300) { 
+                    if (tile && tile.bonus) {
+                        isProcessing = true;
+                        movesCount++; 
+                        totalMoves++;
+                        updateMovesDisplay();
+                        await handleBonusActivation(new Set([tile])); 
+                        isProcessing = false;
+                        checkGameStatus();
+                    }
+                }
+                lastTap = currentTime;
+            }
+            dragStart = null; 
+        }
+        
+        async function handleSwipe(r, c, direction) {
+            if (isProcessing) return; 
+            let r2 = r, c2 = c;
+            if (direction === 'left') c2--; else if (direction === 'right') c2++;
+            else if (direction === 'up') r2--; else if (direction === 'down') r2++;
+            
+            if (r2 < 0 || r2 >= ROWS || c2 < 0 || c2 >= COLS) return;
+            const tile1 = board[r][c], tile2 = board[r2][c2];
+            
+            if (!tile1 || !tile2 || tile1.type !== 'gem' || tile2.type !== 'gem') return;
+            if (tile1.type === 'unmovable' || tile2.type === 'unmovable') return;
+
+            isProcessing = true;
+            await animateSwap(tile1, tile2);
+            
+            const tile1Bonus = tile1.bonus; 
+            const tile2Bonus = tile2.bonus; 
+
+            const isCombo = (tile1Bonus === 'rocket' && tile2Bonus === 'bomb') || (tile1Bonus === 'bomb' && tile2Bonus === 'rocket');
+            
+            if (isCombo) {
+                movesCount++; totalMoves++; updateMovesDisplay();
+                await handleComboActivation(tile1, tile2); 
+            
+            } else if (tile1Bonus && !tile2Bonus) {
+                movesCount++; totalMoves++; updateMovesDisplay();
+                await handleBonusActivation(new Set([tile1])); 
+            } else if (!tile1Bonus && tile2Bonus) {
+                movesCount++; totalMoves++; updateMovesDisplay();
+                await handleBonusActivation(new Set([tile2]));
+            } else if (tile1Bonus && tile2Bonus) {
+                movesCount++; totalMoves++; updateMovesDisplay();
+                await handleBonusActivation(new Set([tile1, tile2])); 
+            } else {
+                const { matches } = findMatches();
+                if (matches.size > 0) {
+                    movesCount++;
+                    totalMoves++;
+                    updateMovesDisplay();
+                    await processAllMatches({ r: r2, c: c2 }); 
+                } else {
+                    await animateSwap(tile1, tile2); 
+                }
+            }
+            
+            isProcessing = false;
+            checkGameStatus(); 
+        }
+
+        function animateSwap(tile1, tile2) {
+            const r1 = tile1.r, c1 = tile1.c;
+            const r2 = tile2.r, c2 = tile2.c;
+            
+            board[r1][c1] = tile2;
+            board[r2][c2] = tile1;
+
+            positionTile(tile1, r2, c2);
+            positionTile(tile2, r1, c1);
+            
+            return new Promise(resolve => setTimeout(resolve, 300));
+        }
+
+        async function animateRocket(r, c) {
+            playSound('rocket'); 
+            const rowEffect = document.createElement('div');
+            rowEffect.className = 'rocket-effect row';
+            rowEffect.style.top = `${GAP + r * (TILE_SIZE + GAP) + TILE_SIZE * 0.15 / 2}px`;
+            rowEffect.style.left = `${GAP}px`;
+            rowEffect.style.width = `${COLS * (TILE_SIZE + GAP) - GAP}px`;
+            rowEffect.style.height = `${TILE_SIZE * 0.85}px`;
+            
+            const colEffect = document.createElement('div');
+            colEffect.className = 'rocket-effect col';
+            colEffect.style.top = `${GAP}px`;
+            colEffect.style.left = `${GAP + c * (TILE_SIZE + GAP) + TILE_SIZE * 0.15 / 2}px`;
+            colEffect.style.width = `${TILE_SIZE * 0.85}px`;
+            colEffect.style.height = `${ROWS * (TILE_SIZE + GAP) - GAP}px`;
+            
+            boardElement.appendChild(rowEffect); 
+            boardElement.appendChild(colEffect);
+            
+            await new Promise(resolve => setTimeout(() => { 
+                rowEffect.remove(); 
+                colEffect.remove(); 
+                resolve(); 
+            }, 300));
+        }
+
+        async function collectTilesFromBonuses(initialActivators, masterDestroySet) {
+            const queue = [...initialActivators].filter(t => t && t.bonus);
+            const processed = new Set(queue);
+            let rocketAnimations = []; 
+            let bombSoundPlayed = false;
+
+            while (queue.length > 0) {
+                const tile = queue.shift();
+                if (!tile) continue; 
+                
+                if (tile.bonus === 'bomb') {
+                    if (!bombSoundPlayed) {
+                        playSound('bomb');
+                        bombSoundPlayed = true;
+                    }
+                    for (let r = Math.max(0, tile.r - 1); r <= Math.min(ROWS - 1, tile.r + 1); r++) {
+                        for (let c = Math.max(0, tile.c - 1); c <= Math.min(COLS - 1, tile.c + 1); c++) {
+                            const neighbor = board[r]?.[c]; 
+                            if (neighbor && !masterDestroySet.has(neighbor)) { 
+                                masterDestroySet.add(neighbor);
+                                if (neighbor.bonus && !processed.has(neighbor)) { 
+                                    processed.add(neighbor); 
+                                    queue.push(neighbor); 
+                                }
+                            }
+                        }
+                    }
+                } else if (tile.bonus === 'rocket') {
+                    rocketAnimations.push(animateRocket(tile.r, tile.c)); 
+                    
+                    for (let c = 0; c < COLS; c++) { 
+                        const n = board[tile.r]?.[c]; 
+                        if (n && !masterDestroySet.has(n)) { 
+                            masterDestroySet.add(n); 
+                            if (n.bonus && !processed.has(n)) { processed.add(n); queue.push(n); }
+                        }
+                    }
+                    for (let r = 0; r < ROWS; r++) { 
+                        const n = board[r]?.[tile.c]; 
+                        if (n && !masterDestroySet.has(n)) { 
+                            masterDestroySet.add(n); 
+                            if (n.bonus && !processed.has(n)) { processed.add(n); queue.push(n); }
+                        }
+                    }
+                }
+            }
+            
+            if (rocketAnimations.length > 0) {
+                await Promise.all(rocketAnimations);
+            }
+        }
+
+        async function handleComboActivation(tile1, tile2) {
+            playSound('combo');
+            const tilesToDestroy = new Set([tile1, tile2]);
+            
+            const centerR = tile1.r;
+            const centerC = tile1.c;
+
+            const comboEffect = document.createElement('div');
+            comboEffect.className = 'combo-effect';
+            comboEffect.style.width = `${TILE_SIZE * 3}px`; 
+            comboEffect.style.height = `${TILE_SIZE * 3}px`;
+            comboEffect.style.top = `${tile1.element.offsetTop - TILE_SIZE}px`; 
+            comboEffect.style.left = `${tile1.element.offsetLeft - TILE_SIZE}px`;
+            boardElement.appendChild(comboEffect);
+            await new Promise(resolve => setTimeout(() => { comboEffect.remove(); resolve(); }, 400));
+            
+            for(let r = Math.max(0, centerR - 1); r <= Math.min(ROWS - 1, centerR + 1); r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if(board[r][c]) tilesToDestroy.add(board[r][c]);
+                }
+            }
+            for(let c = Math.max(0, centerC - 1); c <= Math.min(COLS - 1, centerC + 1); c++) {
+                for (let r = 0; r < ROWS; r++) {
+                    if(board[r][c]) tilesToDestroy.add(board[r][c]);
+                }
+            }
+            
+            await collectTilesFromBonuses(tilesToDestroy, tilesToDestroy);
+            
+            score += tilesToDestroy.size * 10;
+            updateScore(score);
+            
+            await animateMatches(tilesToDestroy);
+            await dropAndRefill();
+            await processAllMatches();
+        }
+
+        async function handleBonusActivation(bonuses) {
+            const tilesToDestroy = new Set(bonuses);
+            await collectTilesFromBonuses(bonuses, tilesToDestroy);
+            
+            score += tilesToDestroy.size * 10;
+            updateScore(score);
+            
+            await animateMatches(tilesToDestroy);
+            await dropAndRefill();
+            await processAllMatches();
+        }
+        
+        async function processAllMatches(swappedCoords = null) {
+            let firstLoop = true;
+            
+            while (true) {
+                let { matches, bonusInfo } = findMatches();
+                if (matches.size === 0) break;
+                
+                playSound('match');
+                
+                const tilesToDestroy = new Set(matches);
+                const bonusesToCreate = [];
+
+                if (bonusInfo.length > 0) {
+                    const handledTilesForBonus = new Set();
+                    
+                    if (firstLoop && swappedCoords) {
+                        const swappedTile = board[swappedCoords.r]?.[swappedCoords.c];
+                        if (swappedTile) {
+                            const bestBonus = bonusInfo
+                                .filter(b => b.tiles.has(swappedTile) && ![...b.tiles].some(t => handledTilesForBonus.has(t)))
+                                .sort((a, b) => (b.type === 'rocket' ? 1 : 0) - (a.type === 'rocket' ? 1 : 0))[0];
+                            
+                            if (bestBonus) {
+                                bonusesToCreate.push({ r: swappedTile.r, c: swappedTile.c, type: bestBonus.type, tileToSave: swappedTile });
+                                bestBonus.tiles.forEach(t => handledTilesForBonus.add(t));
+                            }
+                        }
+                    }
+
+                    bonusInfo.forEach(info => {
+                        const unhandledTiles = [...info.tiles].filter(t => !handledTilesForBonus.has(t));
+                        if (unhandledTiles.length > 0) {
+                            let creationTile = unhandledTiles.find(t => {
+                                const hMatch = getLine(t.r, t.c, 0, 1, t.color).concat(getLine(t.r, t.c, 0, -1, t.color).slice(1));
+                                const vMatch = getLine(t.r, t.c, 1, 0, t.color).concat(getLine(t.r, t.c, -1, 0, t.color).slice(1));
+                                return hMatch.length >= 3 && vMatch.length >= 3;
+                            }) || unhandledTiles[Math.floor(unhandledTiles.length / 2)];
+
+                            if (creationTile) {
+                                bonusesToCreate.push({ r: creationTile.r, c: creationTile.c, type: info.type, tileToSave: creationTile });
+                                info.tiles.forEach(t => handledTilesForBonus.add(t));
+                            }
+                        }
+                    });
+                }
+                
+                firstLoop = false; 
+
+                bonusesToCreate.forEach(bonus => {
+                    tilesToDestroy.delete(bonus.tileToSave);
+                });
+                
+                const unmovableToDestroy = findAdjacentUnmovables(matches); 
+                unmovableToDestroy.forEach(t => tilesToDestroy.add(t));
+                
+                await collectTilesFromBonuses(matches, tilesToDestroy); 
+                
+                score += tilesToDestroy.size * 10;
+                updateScore(score);
+                
+                await animateMatches(tilesToDestroy);
+                
+                bonusesToCreate.forEach(bonus => {
+                    const tile = board[bonus.r]?.[bonus.c]; 
+                    if (tile && tile === bonus.tileToSave) { 
+                       const tileInner = tile.element.querySelector('.tile-inner');
+                       tileInner.className = 'tile-inner'; 
+                       
+                       tile.bonus = bonus.type;
+                       tile.color = null; 
+                       
+                       tileInner.classList.add(bonus.type); 
+                       tileInner.classList.add('bonus-create');
+                       
+                       setTimeout(() => tileInner.classList.remove('bonus-create'), 400);
+                    }
+                });
+                
+                await dropAndRefill();
+            }
+            checkGameStatus();
+        }
+        
+        function getLine(r, c, dr, dc, color) { 
+            const line = [];
+            const tileColor = color || board[r][c]?.color; 
+            if (!tileColor) return line;
+            let cr = r, cc = c;
+            while(cr >= 0 && cr < ROWS && cc >= 0 && cc < COLS && board[cr][cc]?.type === 'gem' && board[cr][cc]?.color === tileColor) {
+                line.push(board[cr][cc]);
+                cr += dr; cc += dc;
+            }
+            return line;
+        }
+
+        function findMatches(noBonuses = false) {
+            const matches = new Set();
+            const bonusInfo = [];
+            const processed = new Set(); 
+
+            if (!noBonuses) {
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        const tile = board[r][c];
+                        if (!tile || !tile.color) continue;
+
+                        const hMatch = getLine(r, c, 0, 1, tile.color).concat(getLine(r, c, 0, -1, tile.color).slice(1));
+                        const vMatch = getLine(r, c, 1, 0, tile.color).concat(getLine(r, c, -1, 0, tile.color).slice(1));
+
+                        if (hMatch.length >= 3 && vMatch.length >= 3) {
+                            const crossSet = new Set([...hMatch, ...vMatch]);
+                            bonusInfo.push({ type: 'rocket', tiles: crossSet });
+                            crossSet.forEach(t => {
+                                matches.add(t);
+                                processed.add(t);
+                            });
+                        }
+                    }
+                }
+            }
+
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const tile = board[r][c];
+                    if (!tile || !tile.color || processed.has(tile)) continue;
+                    
+                    const hMatch = getLine(r, c, 0, 1, tile.color);
+                    if (hMatch.length >= 3) {
+                        hMatch.forEach(t => matches.add(t));
+                        if (!noBonuses && hMatch.length >= 4) {
+                            bonusInfo.push({ type: hMatch.length === 4 ? 'bomb' : 'rocket', tiles: new Set(hMatch) });
+                        }
+                        hMatch.forEach(t => processed.add(t));
+                    }
+                    
+                    const vMatch = getLine(r, c, 1, 0, tile.color);
+                    if (vMatch.length >= 3) {
+                        vMatch.forEach(t => matches.add(t));
+                        if (!noBonuses && vMatch.length >= 4) {
+                             bonusInfo.push({ type: vMatch.length === 4 ? 'bomb' : 'rocket', tiles: new Set(vMatch) });
+                        }
+                        vMatch.forEach(t => processed.add(t));
+                    }
+                }
+            }
+            
+            return { matches, bonusInfo };
+        }
+
+
+        function findAdjacentUnmovables(matches) {
+            const toDestroy = new Set();
+            for(const tile of matches) {
+                if (!tile) continue; 
+                const { r, c } = tile;
+                [[r-1,c], [r+1,c], [r,c-1], [r,c+1]].forEach(([nr, nc]) => {
+                    if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc]?.type === 'unmovable') {
+                        toDestroy.add(board[nr][nc]);
+                    }
+                });
+            }
+            return toDestroy;
+        }
+        
+        function animateMatches(tiles) {
+            tiles.forEach(tile => {
+                if (tile && tile.element && board[tile.r]?.[tile.c] === tile) {
+                    tile.element.classList.add('match');
+                    board[tile.r][tile.c] = null;
+                }
+            });
+            // 300мс задержка для анимации, чтобы они не исчезали резко
+            return new Promise(resolve => setTimeout(() => {
+                tiles.forEach(tile => tile?.element?.remove()); 
+                resolve();
+            }, 300));
+        }
+
+        async function dropAndRefill() {
+            let maxDelay = 0;
+            for (let c = 0; c < COLS; c++) { 
+                let emptyRow = -1; 
+                for (let r = ROWS - 1; r >= 0; r--) { 
+                    if (board[r][c] === null && emptyRow === -1) emptyRow = r; 
+                    else if (board[r][c] !== null && emptyRow !== -1) { 
+                        const tile = board[r][c]; 
+                        board[emptyRow][c] = tile; 
+                        board[r][c] = null; 
+                        positionTile(tile, emptyRow, c); 
+                        emptyRow--; 
+                    } 
+                } 
+            }
+            await new Promise(r => setTimeout(r, 300)); 
+            
+            const newTiles = [];
+            for (let c = 0; c < COLS; c++) {
+                let fillCount = 0;
+                for (let r = ROWS - 1; r >= 0; r--) {
+                    if (board[r][c] === null) {
+                        const newTile = createTile(r, c, 'gem', getRandomColor());
+                        newTile.element.style.top = `${GAP + (r - ROWS) * (TILE_SIZE + GAP)}px`;
+                        const delay = (c * 0.02 + fillCount * 0.08); 
+                        newTile.element.style.transitionDelay = `${delay}s`;
+                        maxDelay = Math.max(maxDelay, delay);
+                        newTiles.push(newTile);
+                        fillCount++;
+                    }
+                }
+            }
+            
+            requestAnimationFrame(() => { 
+                newTiles.forEach(tile => {
+                    positionTile(tile, tile.r, tile.c, true); 
+                }); 
+            });
+            
+            await new Promise(r => setTimeout(r, maxDelay * 1000 + 500)); 
+            newTiles.forEach(tile => {
+                if (tile.element) {
+                    tile.element.style.transition = 'top 0.3s ease-out, left 0.3s ease-out';
+                    tile.element.style.transitionDelay = '0s';
+                }
+            });
+        }
+
+        // --- Utility Functions ---
+        function getRandomColor() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
+        function updateScore(newScore) { score = newScore; scoreElement.textContent = newScore; }
+        function updateMovesDisplay() {
+            const riseThreshold = gameMode === 'classic' ? 5 : 2;
+            const progress = (movesCount % riseThreshold) / riseThreshold * 100;
+            riseProgressBar.style.width = `${progress}%`;
+            movesCountElement.textContent = totalMoves;
+            
+            if (totalMoves > 0 && movesCount > 0 && movesCount % riseThreshold === 0) {
+                 setTimeout(() => { riseUnmovableBlocks(); }, 500); 
+            }
+        }
+        
+        async function riseUnmovableBlocks() {
+            isProcessing = true;
+            
+            // 1. Уничтожаем верхний ряд
+            for (let c = 0; c < COLS; c++) {
+                board[0][c]?.element.remove();
+                board[0][c] = null;
+            }
+            
+            // 2. Сдвигаем все ряды вверх (в данных)
+            for (let r = 1; r < ROWS; r++) {
+                for(let c = 0; c < COLS; c++){
+                    const tile = board[r][c];
+                    board[r-1][c] = tile;
+                    if (tile) {
+                        tile.r = r - 1; // Обновляем r в объекте
+                    }
+                }
+            }
+            
+            // ИСПРАВЛЕНО: Сразу занимаем нижний ряд в логике, чтобы гемы не падали "сквозь" него во время анимации
+            // Создаем массив заглушек (или реальных объектов)
+            const newRowTiles = [];
+            for (let c = 0; c < COLS; c++) {
+                 // Создаем элемент, но пока не добавляем его визуально в DOM, или добавляем, но скрываем
+                 const newTile = createTile(ROWS - 1, c, 'unmovable');
+                 // Ставим его в стартовую позицию ниже экрана для анимации
+                 newTile.element.style.top = `${GAP + ROWS * (TILE_SIZE + GAP)}px`;
+                 newRowTiles.push(newTile);
+                 board[ROWS - 1][c] = newTile; // Логически ряд занят!
+            }
+
+            // 3. Анимируем сдвиг *всех* существующих плиток
+            for (let r = 0; r < ROWS - 1; r++) {
+                 for(let c = 0; c < COLS; c++){
+                     const tile = board[r][c];
+                     if(tile) {
+                         positionTile(tile, tile.r, tile.c); // Анимация на новую позицию
+                     }
+                 }
+            }
+            
+            // Анимация появления нового ряда снизу
+            requestAnimationFrame(() => {
+                newRowTiles.forEach((tile, c) => {
+                     positionTile(tile, ROWS - 1, c);
+                });
+            });
+
+            await new Promise(r => setTimeout(r, 400)); // Ждем анимацию сдвига и появления
+            
+            movesCount = 0; 
+            updateMovesDisplay(); 
+            isProcessing = false;
+            checkGameStatus(); 
+        }
+
+        function checkGameStatus() {
+            if (isProcessing || isPaused) return;
+
+            for (let c = 0; c < COLS; c++) {
+                if (board[0][c]?.type === 'unmovable') {
+                    gameOver(); 
+                    return; 
+                }
+            }
+            
+            if (!checkForPossibleMoves()) {
+                gameOver(); 
+                return;
+            }
+        }
+        
+        function checkForPossibleMoves() {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const tile = board[r][c];
+                    if (!tile) continue;
+                    if (tile.bonus) return true;
+                    if (c < COLS - 1 && canCreateMatchBySwapping(r, c, r, c + 1)) return true;
+                    if (r < ROWS - 1 && canCreateMatchBySwapping(r, c, r + 1, c)) return true;
+                }
+            }
+            return false;
+        }
+        
+        function canCreateMatchBySwapping(r1, c1, r2, c2) {
+            const tile1 = board[r1][c1], tile2 = board[r2][c2];
+            if (!tile1 || !tile2 || tile1.type === 'unmovable' || tile2.type === 'unmovable') return false;
+            if (tile1.bonus || tile2.bonus) return true;
+            if(!tile1.color || !tile2.color) return false;
+            
+            let hasMatch = false;
+            const tempColor1 = tile1.color, tempColor2 = tile2.color;
+            tile1.color = tempColor2; tile2.color = tempColor1;
+
+            const checkTile = (r, c) => {
+                const color = board[r][c]?.color;
+                if (!color) return false;
+                const hMatch = getLine(r, c, 0, 1, color).concat(getLine(r, c, 0, -1, color).slice(1));
+                const vMatch = getLine(r, c, 1, 0, color).concat(getLine(r, c, -1, 0, color).slice(1));
+                return hMatch.length >= 3 || vMatch.length >= 3;
+            };
+
+            if (checkTile(r1, c1) || checkTile(r2, c2)) {
+                hasMatch = true;
+            }
+            tile1.color = tempColor1; tile2.color = tempColor2;
+            return hasMatch;
+        }
+
+        
+        function gameOver() {
+            if(isPaused) return; 
+            playSound('lose'); 
+            isPaused = true;
+            
+            saveStats(); 
+            
+            showInterstitialAd(() => {
+                isPaused = true; 
+                document.getElementById('final-score-value').textContent = score;
+                document.getElementById('final-moves-value').textContent = totalMoves;
+                openModal(document.getElementById('game-over-modal'));
+            });
+        }
+        
+        function saveStats() {
+            if (!stats[gameMode]) {
+                 stats[gameMode] = { score: 0, moves: 0 };
+            }
+            if(score > stats[gameMode].score) {
+                stats[gameMode].score = score;
+                stats[gameMode].moves = totalMoves;
+            }
+            saveGameData();
+        }
+
+        // --- UI Control ---
+        function openModal(modal) { modal.classList.add('active'); }
+        function closeModal(modal) { modal.classList.remove('active'); }
+        
+        document.getElementById('classic-mode-btn').addEventListener('click', () => startGame('classic'));
+        document.getElementById('hard-mode-btn').addEventListener('click', () => startGame('hard'));
+        document.getElementById('pause-btn').addEventListener('click', () => { if(!isPaused) { openModal(document.getElementById('pause-modal')); isPaused = true; } });
+        document.getElementById('resume-btn').addEventListener('click', () => { closeModal(document.getElementById('pause-modal')); isPaused = false; });
+        
+        function goToMainMenu() {
+            closeModal(document.getElementById('pause-modal'));
+            closeModal(document.getElementById('game-over-modal'));
+            gameScreen.classList.add('hidden');
+            mainMenuScreen.classList.remove('hidden');
+            showBannerAd(); 
+        }
+        
+        document.getElementById('restart-game-btn').addEventListener('click', () => { closeModal(document.getElementById('pause-modal')); startGame(gameMode); });
+        document.getElementById('main-menu-btn-pause').addEventListener('click', goToMainMenu);
+        document.getElementById('restart-game-over-btn').addEventListener('click', () => { closeModal(document.getElementById('game-over-modal')); startGame(gameMode); });
+        document.getElementById('main-menu-btn-over').addEventListener('click', goToMainMenu);
+        
+        document.getElementById('settings-btn').addEventListener('click', () => openModal(document.getElementById('settings-modal')));
+        document.getElementById('close-settings-btn').addEventListener('click', () => closeModal(document.getElementById('settings-modal')));
+        document.getElementById('rules-btn').addEventListener('click', () => openModal(document.getElementById('rules-modal')));
+        document.getElementById('close-rules-btn').addEventListener('click', () => closeModal(document.getElementById('rules-modal')));
+        document.getElementById('stats-btn').addEventListener('click', () => { updateStatsTable(); openModal(document.getElementById('stats-modal')); });
+        document.getElementById('close-stats-btn').addEventListener('click', () => closeModal(document.getElementById('stats-modal')));
+
+        function updateMuteButton() { 
+            // ИСПРАВЛЕНО: Чекбокс ВКЛ (звук есть) -> !isMuted
+            muteToggle.checked = !isMuted; 
+        }
+        function toggleMute() {
+            // ИСПРАВЛЕНО: Если чекбокс снят (false), значит Muted = true
+            isMuted = !muteToggle.checked;
+            saveGameData();
+            if(!isMuted) playSound('tap');
+        }
+        muteToggle.addEventListener('change', toggleMute);
+        
+        function updateMusicMuteButton() { 
+            muteMusicToggle.checked = !isMusicMuted;
+        }
+        function toggleMusicMute() {
+            isMusicMuted = !muteMusicToggle.checked;
+            if (isMusicMuted) { stopMusic(); } else { playMusic(); }
+            saveGameData();
+        }
+        muteMusicToggle.addEventListener('change', toggleMusicMute);
+
+
+        function updateStatsTable() {
+            const tableBody = document.querySelector('#stats-table tbody');
+            
+            const bestClassic = stats.classic ? stats.classic.score : 0;
+            const movesClassic = stats.classic ? stats.classic.moves : 0;
+            const bestHard = stats.hard ? stats.hard.score : 0;
+            const movesHard = stats.hard ? stats.hard.moves : 0;
+
+            tableBody.innerHTML = `
+                <tr>
+                    <td>Классика</td>
+                    <td>${bestClassic > 0 ? bestClassic : '---'}</td>
+                    <td>${movesClassic > 0 ? movesClassic : '---'}</td>
+                </tr>
+                <tr>
+                    <td>Хард</td>
+                    <td>${bestHard > 0 ? bestHard : '---'}</td>
+                    <td>${movesHard > 0 ? movesHard : '---'}</td>
+                </tr>
+            `;
+        }
+        
+        function updateTheme(newTheme, skipSave = false) {
+            document.body.className = newTheme; 
+            mainContainer.style.backgroundImage = `url('bg-${newTheme.replace('theme-', '')}.png')`;
+            currentTheme = newTheme;
+            
+            document.querySelectorAll('.theme-selection button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === newTheme);
+            });
+            if(!skipSave) saveGameData(); 
+        }
+
+        document.querySelector('.theme-selection').addEventListener('click', (e) => {
+            const newTheme = e.target.dataset.theme;
+            if (!newTheme) return;
+            updateTheme(newTheme);
+        });
     }
-    
-    function updateThemeUI() {
-        applyTheme(currentTheme);
-    }
-    
     </script>
 </body>
 </html>
